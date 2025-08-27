@@ -38,7 +38,7 @@ From then on the file can be loaded within Section 1.1
 
 Without yet combining the drawn stars with MESA models, one could visualize in Section 1.2 the distribution of stars. Here below:
 
-**the disk of a spiral galaxy**
+**The disk of a spiral galaxy**
 <img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/05c772d4-7a85-40b0-b3d3-7f5b24fad2d3" />
 
 
