@@ -56,6 +56,12 @@ Finally, the quantized dataframe is saved in its respective folder and ready to 
 ## MESA processing
 
 In Section 1.3, the code combines MESA tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
-The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or WR star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
+The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
 
-The final outcome will be a dataframe with the entire population of stars, ready to analyze
+The final outcome will be a dataframe with the entire population of stars, ready to analyze. 
+See e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
+
+<img width="1169" height="880" alt="image" src="https://github.com/user-attachments/assets/f72db2e4-7f65-4b90-8656-d762a287533b" />
+
+
+
