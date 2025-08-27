@@ -45,6 +45,17 @@ Without yet combining the drawn stars with MESA models, one could visualize in S
 ## Quantization
 
 The masses and metallicities of stars drawn by the given distributions may not match the discrete sample of MESA tracks that one owns. 
-For this reason, they must be binned to the closest match in the MESA sample in Section 1.4, where the available stellar masses and metallicities are listed.
+For this reason, they must be binned to the closest match in the MESA sample in Section 1.3, where the available stellar masses and metallicities are listed.
 
-<font color="red;">Metallicities are expressed as [Fe/H]</font>
+$\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity onto [Fe/H]
+
+Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
+
+<img width="1194" height="1167" alt="image" src="https://github.com/user-attachments/assets/70c5dfaa-76c1-4b5f-bb83-10ad3738934e" />
+
+## MESA processing
+
+In Section 1.3, the code combines MESA tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
+The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or WR star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
+
+The final outcome will be a dataframe with the entire population of stars, ready to analyze
