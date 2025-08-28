@@ -7,7 +7,7 @@ Lookback time, metallicity and galactic position distribution taken from Wagg et
 - The metallicity distribution was renormalized to have a maximum of [Fe/H] = 0.5, i.e. roughly 3 times Solar metallicity
 - Depending on the chosen galaxy shape:
   - **"elliptical"** --> nothing changes in the galactic distribution. Uniform distribution of radial angles.
-  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. See at the end the modelling of the spiral arms' stars
+  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. Deteails on spiral arms modelling at the end
 
 
 ## Samplers and efficient calculations
