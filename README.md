@@ -7,7 +7,27 @@ Lookback time, metallicity and galactic position distribution taken from Wagg et
 - The metallicity distribution was renormalized to have a maximum of [Fe/H] = 0.5, i.e. roughly 3 times Solar metallicity
 - Depending on the chosen galaxy shape:
   - **"elliptical"** --> nothing changes in the galactic distribution. Uniform distribution of radial angles.
-  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. 
+  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm.
+ 
+| Arm Name | Pitch Angle (p) [deg] | Reference Radius [kpc] | Reference Angle βkink [deg] | Radial Range |
+|----------|----------|----------| ----------| ----------|
+| Scutum-Centaurus | 2.0<sup>1</sup> |	3.14<sup>1, 2</sup> |	25<sup>1</sup>	| 3.0 - 16.0<sup>1, 3</sup> |
+| Sagittarius-Carina | 13.1<sup>4</sup>	| 4.93<sup>4</sup> |	-45<sup>4</sup>	| 4.0 - 16.0<sup>1, 3</sup> |
+| Perseus | 9.5<sup>5</sup>	| 9.94<sup>6</sup>	| 150<sup>1</sup>	| 6.0 - 18.0<sup>1</sup> |
+| Sagittarius-Carina | 13.0<sup>4</sup> |	4.0<sup>7</sup>	| -100<sup>1</sup>	| 3.5 - 20+<sup>1, 6, 8</sup> |
+| Local (Orion Spur) | 10.1<sup>1</sup>	| 8.15<sup>9</sup>	| 0<sup>10</sup>	| 6.0 - 9.0<sup>11</sup>
+
+1. [Reid + (2019)](https://iopscience.iop.org/article/10.3847/1538-4357/ab4a11)
+2. Starting point consistent with models where arms begin a few kpc from the center
+3. It starts near the end of the central bar and extends far into the disk
+4. [Vallée (2017)](https://arxiv.org/pdf/1711.05228)
+5. Average of two values around the curvature kink in [Reid+ (2019)](https://iopscience.iop.org/article/10.3847/1538-4357/ab4a11)
+6. [Bobylev & Bajkova (2014)](https://academic.oup.com/mnras/article/437/2/1549/1105964?login=false)
+7. [Reid et al. (2019)](https://iopscience.iop.org/article/10.3847/1538-4357/ab4a11) place at a "kink" radius of 4.46 kpc
+8. Combination of the inner Norma arm with the very distant Outer arm, which extends beyond the currently mapped regions of the Galaxy
+9. Sun Distance
+10. Galactocentric coordinate system
+11. [Xu+ (2016)](https://www.science.org/doi/10.1126/sciadv.1600878)
  
 ## Samplers and efficient calculations
 
