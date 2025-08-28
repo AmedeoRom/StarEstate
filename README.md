@@ -7,7 +7,7 @@ Lookback time, metallicity and galactic position distribution taken from Wagg et
 - The metallicity distribution was renormalized to have a maximum of [Fe/H] = 0.5, i.e. roughly 3 times Solar metallicity
 - Depending on the chosen galaxy shape:
   - **"elliptical"** --> nothing changes in the galactic distribution
-  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. The code also give each arm a specific angle distribution within a set angular scatter (**ANGULAR_SCATTER_DEG**) to position stars within them (Reid et al. 2019)
+  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. 
  
 ## Samplers and efficient calculations
 
@@ -28,7 +28,7 @@ To load the samplers to generate the population.
 ## Generate the population
 
 With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file. 
-Here below the generated plots for a population of 10<sup>6</sup> stars (the different alpha angles representing different galactic arms)
+Here below the generated plots for a population of 10<sup>6</sup> stars. 
 
 With the use of pre-generated samplers, **it took less than a minute to generate all the stars**
 
