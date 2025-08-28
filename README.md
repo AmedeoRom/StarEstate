@@ -65,7 +65,7 @@ The code also give each star a stellar type following the Morgan-Keenan (MK) spe
 
 **Currently the code takes metallicity folders that are named in the format "1Zsun", "0.5Zsun", etc. and then searches the different mass folders (e.g. "0.15", "20", "300"), where LOGS directories are, within them**.
 
-If I will have time I will make it more customizable. **Just remember to follow this structure.**
+If I will have time I will make it more customizable. **Remember to follow this structure.**
 
 The final outcome will be a dataframe with the entire population of stars, ready to analyze. 
 See e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
@@ -83,12 +83,12 @@ In particular, the code defines introduces the concept of dynamical temperature,
 - **Intermediate-Age Tracers (Age ~100 Myr – 1 Gyr)**: Stars in this age range, such as Classical Cepheids and young open clusters, are dynamically "warmer." Over their lifetimes, they have had time to drift from their birth sites within the arms. Their velocity dispersions have increased due to gravitational scattering off molecular clouds and the spiral arms themselves. Consequently, while they still show a clear concentration in the arms, their distribution is more dispersed than that of the youngest stars.
 - **Old Tracers (Age > 1 Gyr)**: The general population of older disk stars. They are dynamically "hot," with large velocity dispersions. Their orbits are less affected by the relatively weak perturbation of the spiral arms. As a result, they trace a much smoother, lower-contrast pattern that reflects only the deepest parts of the gravitational potential well—the dominant two-armed stellar pattern.
 
-| Arm Name | Pitch Angle (p) [deg] | Reference Radius [kpc] | Reference Angle βkink [deg] | Radial Range | Arm Membership Probability
+| Arm Name | Pitch Angle (p) [deg] | Reference Radius [kpc] | Reference Angle β<sub>kink</sub> [deg] | Radial Range | Arm Membership Probability
 |----------|----------|----------| ----------| ----------| ----------|
 | Scutum-Centaurus | 2.0<sup>1</sup> |	3.14<sup>1, 2</sup> |	25<sup>1</sup>	| 3.0 - 16.0<sup>1, 3</sup> | 0.30 |
 | Sagittarius-Carina | 13.1<sup>4</sup>	| 4.93<sup>4</sup> |	-45<sup>4</sup>	| 4.0 - 16.0<sup>1, 3</sup> | 0.25 |
 | Perseus | 9.5<sup>5</sup>	| 9.94<sup>6</sup>	| 150<sup>1</sup>	| 6.0 - 18.0<sup>1</sup> | 0.20 |
-| Sagittarius-Carina | 13.0<sup>4</sup> |	4.0<sup>7</sup>	| -100<sup>1</sup>	| 3.5 - 20+<sup>1, 6, 8</sup> | 0.15 |
+| Sagittarius-Carina | 13.0<sup>4</sup> |	4.0<sup>7</sup>	| -100<sup>1</sup>	| 3.5 - 20<sup>1, 6, 8</sup> | 0.15 |
 | Local (Orion Spur) | 10.1<sup>1</sup>	| 8.15<sup>9</sup>	| 0<sup>10</sup>	| 6.0 - 9.0<sup>11</sup> | 0.10 |
 
 1. [Reid + (2019)](https://iopscience.iop.org/article/10.3847/1538-4357/ab4a11)
