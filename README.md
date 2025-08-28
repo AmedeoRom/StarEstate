@@ -27,7 +27,7 @@ To load the samplers to generate the population.
 
 ## Generate the population
 
-With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while optionally saving the population as a CSV file. 
+With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file. 
 Here below the generated plots for a population of 10<sup>6</sup> stars (the different alpha angles representing different galactic arms)
 
 <img width="761" height="1720" alt="image" src="https://github.com/user-attachments/assets/14fbf11e-b4ce-4e1d-afeb-45df449852d9" />
