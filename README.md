@@ -16,22 +16,24 @@ Doing the **Inverse Transform Sampling** for the distrbutions of every populatio
 
 The solution around this problem is the use of samplers that are saved in a dedicated directory and that already contain all the numerical solutions for the given initial distribution, and then loading it each time a new population needs to be drawn. This reduces the computational time of a population ~10<sup>6</sup> stars in a spiral galaxy from hours to few minutes. In the directory, two samplers for a spiral galaxy, one for an IMF between 0.11 and 220 Msun, and another between 50 and 300 Msun, is delivered as an example.
 
-The recommended route would be to run the first cell in Section 1 with 
+**If samplers for a specific mass range and resolution are not saved yet**, the recommended route would be to run the first cell in Section 1 with 
 
 > MODE = 'create_and_save_samplers'
 
-To set the desired IMF, position, age, and metallicity samplers. Then every other time with
+To set the desired IMF, position, age, and metallicity samplers.
+Once the samplers are saved, then every other time the code can be run with
 
 > MODE = 'load_samplers_and_generate'
 
 To load the samplers to generate the population.
 
 ## Generate the population
-With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file. 
-Here below the generated plots for a population of 10<sup>6</sup> stars. 
+With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file.  
 
 With a good laptop, the samplers with a resolution of 10<sup>6</sup> bins were calculated and saved in 4-5 hours.
 While using them, **it took 30 seconds to generate 10<sup>6</sup> stars, 4 minutes to generate 10<sup>7</sup>, and 40 minutes to generate 10<sup>8</sup>**
+
+Here below the generated plots for a population of 10<sup>6</sup> stars.
 
 <img width="761" height="1720" alt="image" src="https://github.com/user-attachments/assets/14fbf11e-b4ce-4e1d-afeb-45df449852d9" />
 
