@@ -50,7 +50,7 @@ Without yet combining the drawn stars with MESA models, one could visualize in S
 The masses and metallicities of stars drawn by the given distributions may not match the discrete sample of MESA tracks that one owns. 
 For this reason, they must be binned to the closest match in the MESA sample in Section 1.3, where the available stellar masses and metallicities are listed.
 
-$\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity onto [Fe/H]
+$\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity into [Fe/H]
 
 Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
 
