@@ -31,7 +31,8 @@ To load the samplers to generate the population.
 With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file. 
 Here below the generated plots for a population of 10<sup>6</sup> stars. 
 
-With the use of pre-generated samplers, **it took less than a minute to generate all the stars**
+With a good laptop, the samplers were calculated and saved in 4-5 hourse.
+While using them, **it took 30 seconds to generate 10<sup>6</sup> stars, 4 minutes to generate 10<sup>7</sup>, and 40 minutes to generate 10<sup>8</sup>**
 
 <img width="761" height="1720" alt="image" src="https://github.com/user-attachments/assets/14fbf11e-b4ce-4e1d-afeb-45df449852d9" />
 
