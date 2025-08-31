@@ -46,6 +46,9 @@ Without yet combining the drawn stars with MESA models, one could visualize in S
 **The disk of a spiral galaxy**, with the yellow cross representing the galactic centre
 <img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/05c772d4-7a85-40b0-b3d3-7f5b24fad2d3" />
 
+**The disk of an elliptical galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre
+<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/2660ff2b-61d7-49ed-afda-fea1558d65dd" />
+
 
 ## Quantization
 
