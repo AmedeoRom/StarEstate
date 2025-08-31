@@ -33,9 +33,10 @@ With the generate_star_population function one will be able to draw a number of 
 With a good laptop, the samplers with a resolution of 10<sup>6</sup> bins were calculated and saved in 4-5 hours.
 While using them, **it took 30 seconds to generate 10<sup>6</sup> stars, 4 minutes to generate 10<sup>7</sup>, and 40 minutes to generate 10<sup>8</sup>**
 
-Here below the generated plots for a population of 10<sup>6</sup> stars.
+Here below the generated plots for a population of 10<sup>8</sup> stars.
 
-<img width="761" height="1720" alt="image" src="https://github.com/user-attachments/assets/14fbf11e-b4ce-4e1d-afeb-45df449852d9" />
+<img width="796" height="1720" alt="image" src="https://github.com/user-attachments/assets/d312f60f-6af2-4b6e-b933-9a7bbf776383" />
+
 
 From then on the file can be loaded within Section 1.1
 
@@ -43,8 +44,9 @@ From then on the file can be loaded within Section 1.1
 
 Without yet combining the drawn stars with MESA models, one could visualize in Section 1.2 the distribution of stars. Here below:
 
-**The disk of a spiral galaxy**, with the yellow cross representing the galactic centre
-<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/05c772d4-7a85-40b0-b3d3-7f5b24fad2d3" />
+**The disk of a spiral galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre. Different colors represent different arms
+<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/f75a73f1-19d8-4f27-a526-d6e6d0f37b9e" />
+
 
 **The disk of an elliptical galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre, and the color scale the radial coordinates
 <img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/2660ff2b-61d7-49ed-afda-fea1558d65dd" />
