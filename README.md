@@ -63,7 +63,8 @@ $\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are c
 
 Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
 
-<img width="1194" height="1167" alt="image" src="https://github.com/user-attachments/assets/70c5dfaa-76c1-4b5f-bb83-10ad3738934e" />
+<img width="1189" height="1173" alt="image" src="https://github.com/user-attachments/assets/8a0a9d4c-e50f-46dc-b6ad-e31e2f6884ad" />
+
 
 ## MESA processing
 
