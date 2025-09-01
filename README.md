@@ -45,7 +45,8 @@ From then on the file can be loaded within Section 1.1
 Without yet combining the drawn stars with MESA models, one could visualize in Section 1.2 the distribution of stars. Here below:
 
 **The disk of a spiral galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre. Different colors represent different arms
-<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/f75a73f1-19d8-4f27-a526-d6e6d0f37b9e" />
+<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/d920f70d-5514-40f8-8f32-a4b32115f5f2" />
+
 
 
 **The disk of an elliptical galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre, and the color scale the radial coordinates. The vertical profile of the galaxy is mainly dark colors because in proportion there are more low-radius stars than the ones at the outer edges
