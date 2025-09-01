@@ -61,7 +61,7 @@ For this reason, they must be binned to the closest match in the MESA sample in 
 
 $\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity into [Fe/H]
 
-Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
+Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 4 MESA metallicities
 
 <img width="1189" height="1173" alt="image" src="https://github.com/user-attachments/assets/8a0a9d4c-e50f-46dc-b6ad-e31e2f6884ad" />
 
