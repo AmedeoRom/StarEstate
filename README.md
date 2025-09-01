@@ -48,8 +48,9 @@ Without yet combining the drawn stars with MESA models, one could visualize in S
 <img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/f75a73f1-19d8-4f27-a526-d6e6d0f37b9e" />
 
 
-**The disk of an elliptical galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre, and the color scale the radial coordinates
-<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/2660ff2b-61d7-49ed-afda-fea1558d65dd" />
+**The disk of an elliptical galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre, and the color scale the radial coordinates. The vertical profile of the galaxy is mainly dark colors because in proportion there are more low-radius stars than the ones at the outer edges
+<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/eda23624-5f61-4fca-8f54-0a02ac408ad0" />
+
 
 
 ## Quantization
