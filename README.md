@@ -76,7 +76,11 @@ The code also give each star a stellar type following the Morgan-Keenan (MK) spe
 If I will have time I will make it more customizable. **Remember to follow this structure.**
 
 The final outcome will be a dataframe with the entire population of stars, ready to analyze. 
-See e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
+Integrated in the file, an HRD plotter is included to show the metallicity and mass distribution of the retrieved stars
+<img width="1383" height="674" alt="image" src="https://github.com/user-attachments/assets/5024ed03-7022-448f-8d7b-65c86922f185" />
+
+
+See also e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
 
 <img width="1169" height="880" alt="image" src="https://github.com/user-attachments/assets/f72db2e4-7f65-4b90-8656-d762a287533b" />
 
