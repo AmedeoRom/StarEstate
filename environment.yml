@@ -1,0 +1,28 @@
+name: starestate
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+
+  # Core Scientific Stack
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+
+  # Astronomy Specific
+  - astropy
+  - pyastronomy
+
+  # Jupyter / Notebook support
+  - ipykernel
+  - ipython
+  - notebook
+
+  # Utilities
+  - pip
+
+  # Packages that are often best installed via pip
+  - pip:
+    - mesa_reader
