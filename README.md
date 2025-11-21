@@ -68,6 +68,9 @@ Finally, the quantized dataframe is saved in its respective folder and ready to 
 
 ## MESA processing
 
+Example MESA tracks that can be used for a tutorial are available here: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
+Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.
+
 In Section 1.3, the code combines MESA tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
 The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
 
