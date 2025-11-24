@@ -83,11 +83,6 @@ Integrated in the file, an HRD plotter is included to show the metallicity and m
 <img width="1383" height="674" alt="image" src="https://github.com/user-attachments/assets/5024ed03-7022-448f-8d7b-65c86922f185" />
 
 
-!See also e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
-
-!#<img width="1169" height="880" alt="image" src="https://github.com/user-attachments/assets/f72db2e4-7f65-4b90-8656-d762a287533b" />
-
-
 ## Spiral Galaxy Modelling
 
 The code gives a membership probability for each star to be within one of the major Milky Way arms: Scutum-Centaurus, Perseus, Sagittarius-Carina, Norma-Outer, Local (Orion Spur). This is fully a guess work from the literature and model variations are invited. For each arm, as shown in the table below, various parameters from the literature are adopted to generate a distribution of angles as a function of age and radial positions.
