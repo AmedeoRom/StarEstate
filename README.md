@@ -83,9 +83,9 @@ Integrated in the file, an HRD plotter is included to show the metallicity and m
 <img width="1383" height="674" alt="image" src="https://github.com/user-attachments/assets/5024ed03-7022-448f-8d7b-65c86922f185" />
 
 
-See also e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
+!See also e.g. the synthetic population from the upcoming Romagnolo+ (2025b) below for different MESA models and WR conditions
 
-<img width="1169" height="880" alt="image" src="https://github.com/user-attachments/assets/f72db2e4-7f65-4b90-8656-d762a287533b" />
+!#<img width="1169" height="880" alt="image" src="https://github.com/user-attachments/assets/f72db2e4-7f65-4b90-8656-d762a287533b" />
 
 
 ## Spiral Galaxy Modelling
