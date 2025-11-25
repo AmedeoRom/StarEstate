@@ -2,6 +2,7 @@
 
 ## 1. Galaxy Positions
 Comparison of spatial distributions for different galaxy morphologies.
+Yellow cross represents the galactic centre. For elliptical galaxies different colors represent the radial coordinates, while for spiral galaxies they show the populations of different arms 
 
 | Morphology | 1 Million Stars | 100 Million Stars |
 | :--- | :---: | :---: |
