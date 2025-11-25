@@ -84,11 +84,11 @@ Without yet combining the drawn stars with evolutionary models, one could visual
 ## Quantization
 
 The masses and metallicities of stars drawn by the given distributions likely don't match the discrete sample of stellar tracks that one owns. 
-For this reason, they must be binned to the closest match in the MESA sample in Section 1.3, where the available stellar masses and metallicities are listed.
+For this reason, they must be binned to the closest match in the star sample in Section 1.3, where the available stellar masses and metallicities are listed.
 
 $\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity to [Fe/H]
 
-Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
+Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 initial metallicities
 
 <img width="1651" height="1654" alt="quantization" src="https://github.com/user-attachments/assets/cb6e186c-d384-42c2-9d5e-7738af63a944" />
 
@@ -101,7 +101,7 @@ MESA tracks for this tutorial will be available soon after the submission of the
 SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. 
 Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
 
-In Section 1.3, the code combines MESA tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
+In Section 1.3, the code combines stellar tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
 The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
 
 **Currently the code takes metallicity folders that are named in the format "1Zsun", "0.5Zsun", etc. and then searches the different mass folders (e.g. "0.15", "20", "300"), where LOGS directories are, within them. Remember to follow this structure.**
