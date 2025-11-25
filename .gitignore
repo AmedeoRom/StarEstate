@@ -1,0 +1,27 @@
+# --- Python & Jupyter Garbage ---
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# --- Simulation Data (CRITICAL) ---
+# Ignore massive data files so you don't crash GitHub
+*.csv
+*.pkl
+*.h5
+*.hdf5
+*.dat
+
+# Ignore specific output folders
+output/
+data/
+simulations/
+
+# --- Plots (Optional) ---
+# If you generate 1000s of plots, ignore them.
+# Only keep the ones you manually save to a "gallery" folder.
+plots/
+*.png
+*.pdf
+
+# --- OS Junk ---
+.DS_Store
