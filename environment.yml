@@ -1,4 +1,4 @@
-name: starestate
+name: starestate_complete
 channels:
   - conda-forge
   - defaults
@@ -15,6 +15,13 @@ dependencies:
   - astropy
   - pyastronomy
 
+  # Big Data & Visualization (Required by Execution.ipynb & star_processing.py)
+  - dask
+  - datashader
+  - holoviews
+  - colorcet
+  - pyarrow  # Essential for pandas/dask to read/write .parquet files
+
   # Jupyter / Notebook support
   - ipykernel
   - ipython
@@ -23,6 +30,6 @@ dependencies:
   # Utilities
   - pip
 
-  # Packages that are often best installed via pip
+  # Packages via pip
   - pip:
     - mesa_reader
