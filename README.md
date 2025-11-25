@@ -14,7 +14,7 @@ Lookback time, metallicity and galactic position distribution taken from [Wagg e
 
 Doing the **Inverse Transform Sampling** for the distrbutions of every population (MODE = 'generate_on_the_fly') requires extensive computational resources, since the code needs to numerically solve integrals for each star.
 
-The solution around this problem is the use of samplers that are saved in a dedicated directory and that already contain all the numerical solutions for the given initial distribution, and then loading it each time a new population needs to be drawn. This reduces the computational time of a population ~10<sup>6</sup> stars in a spiral galaxy from hours to few minutes. In the directory, two samplers for a spiral galaxy, one for an IMF between 0.11 and 220 Msun, and another between 50 and 300 Msun, is delivered as an example.
+The solution around this problem is the use of samplers that are saved in a dedicated directory and that already contain all the numerical solutions for the given initial distribution, and then loading it each time a new population needs to be drawn. This reduces the computational time of a population ~10<sup>6</sup> stars in a spiral galaxy from hours to few minutes. In the directory, a samplers for a spiral galaxy for an IMF between 0.11 and 100 $M_\odot$ and a resolution of 25,000 bins (across 4 different independent dimensions this represents $25,000^4$ $\approx$ 3.9 x $10^{17}$ combinations) is delivered as an example.
 
 **If samplers for a specific mass range and resolution are not saved yet**, the recommended route would be to run the first cell in Section 1 with 
 
@@ -30,12 +30,12 @@ To load the samplers to generate the population.
 ## Generate the population
 With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file.  
 
-With a good laptop, the samplers with a resolution of 10<sup>6</sup> bins were calculated and saved in 4-5 hours.
+With a good laptop, the samplers with a resolution of 25,000 bins were calculated and saved in less than an hour.
 While using them, **it took 30 seconds to generate 10<sup>6</sup> stars, 4 minutes to generate 10<sup>7</sup>, and 40 minutes to generate 10<sup>8</sup>**
 
-Here below the generated plots for a population of 10<sup>8</sup> stars.
+Here below the generated plots for a population of 10<sup>6</sup> stars.
 
-<img width="796" height="1720" alt="image" src="https://github.com/user-attachments/assets/d312f60f-6af2-4b6e-b933-9a7bbf776383" />
+<img width="784" height="1720" alt="Distributions" src="https://github.com/user-attachments/assets/4ddc1e8c-c610-4779-b1cc-078f27797ee2" />
 
 
 From then on the file can be loaded within Section 1.1
