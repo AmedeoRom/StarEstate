@@ -171,7 +171,7 @@ def draw_spiral_arm_positions(radii, ages, arm_params_list, arm_membership_prob)
 
     final_angles_deg = []
 
-    # --- NEW: Age-dependent angular scatter ---
+    # --- Age-dependent angular scatter ---
     # Young stars (<100 Myr) are "dynamically cold" -> low scatter
     # Intermediate stars are "warmer" -> medium scatter
     # Old stars (>1 Gyr) are "dynamically hot" -> high scatter, less confined to arms
