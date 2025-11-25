@@ -108,6 +108,6 @@ The code also give each star a stellar type following the Morgan-Keenan (MK) spe
 
 The final outcome will be a dataframe with the entire population of stars, ready to be analyzed. 
 Integrated in the file, an Hertzprung-Russel diagram plotter is included to show the metallicity and mass distribution of the retrieved stars.
-> **Resolution and code comparison: [View the SSE vs. MESA benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**
-
+<!-- **Resolution and code comparison: [View the SSE vs. MESA benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**-->
+> **Resolution comparison: [View the SSE benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**
 
