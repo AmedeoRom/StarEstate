@@ -6,7 +6,7 @@ Yellow cross represents the galactic centre. For elliptical galaxies different c
 
 | Morphology | 1 Million Stars | 100 Million Stars |
 | :--- | :---: | :---: |
-| **Elliptical** | <img width="1772" height="915" alt="gal_code_1M_elliptical" src="https://github.com/user-attachments/assets/afc3d5d1-221b-49bd-a16a-cd3287ffa777" /> | <img width="1772" height="915" alt="gal_code_1M_elliptical" src="https://github.com/user-attachments/assets/144f0dd1-ced4-400a-b05b-1a3bd4c9664e" /> |
+| **Elliptical** | <img width="1772" height="915" alt="gal_code_1M_elliptical" src="https://github.com/user-attachments/assets/afc3d5d1-221b-49bd-a16a-cd3287ffa777" /> | <img width="1772" height="915" alt="gal_code_100M_elliptical" src="https://github.com/user-attachments/assets/bf43c2aa-c63f-436c-b20c-275dfece5382" /> |
 | **Spiral** | <img width="1772" height="915" alt="gal_code_1M" src="https://github.com/user-attachments/assets/5aac0561-2e24-4b1d-b743-5af60340dd01" /> | <img width="1772" height="915" alt="gal_code_100M" src="https://github.com/user-attachments/assets/d4bb1fd3-9f55-44b4-a206-2d4a7377320d" /> |
 
 > **Observation:** Note that the scatter points increase in size as the stellar sample grows for visualization purposes
