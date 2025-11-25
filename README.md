@@ -28,57 +28,8 @@ Once the samplers are saved, then every other time the code can be run with
 To load the samplers to generate the population.
 
 ## Generate the population
-With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file.  
 
-With a good laptop, the samplers with a resolution of 25,000 bins were calculated and saved in less than an hour.
-While using them, **it took 30 seconds to generate 10<sup>6</sup> stars, 4 minutes to generate 10<sup>7</sup>, and 40 minutes to generate 10<sup>8</sup>**
-
-Here below the generated plots for a population of 10<sup>6</sup> stars.
-
-<img width="784" height="1720" alt="Distributions" src="https://github.com/user-attachments/assets/4ddc1e8c-c610-4779-b1cc-078f27797ee2" />
-
-
-From then on the file can be loaded within Section 1.1
-
-### Galaxy visualization
-
-Without yet combining the drawn stars with evolutionary models, one could visualize in Section 1.2 the distribution of stars with a dynamical size adjustment for the scatter point sizes depending on the size of the stellar sample.
-*Making a scatter plot of many data points can considerably slow the code.* For $10^8$ stars a good laptop can take nearly an hour.
-
-> **Resolution Comparison: [Click here to compare 1M vs 100M Star plots in Results.md](Results.md#1-galaxy-positions)**
-
-
-## Quantization
-
-The masses and metallicities of stars drawn by the given distributions likely don't match the discrete sample of MESA tracks that one owns. 
-For this reason, they must be binned to the closest match in the MESA sample in Section 1.3, where the available stellar masses and metallicities are listed.
-
-$\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity into [Fe/H]
-
-Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
-
-<img width="1651" height="1654" alt="quantization" src="https://github.com/user-attachments/assets/cb6e186c-d384-42c2-9d5e-7738af63a944" />
-
-
-## MESA processing
-
-Example MESA tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract) that can be used for a tutorial are available here **(link not yet available; still under review in Zenodo)**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
-Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.
-Similarly, SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
-
-In Section 1.3, the code combines MESA tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
-The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
-
-**Currently the code takes metallicity folders that are named in the format "1Zsun", "0.5Zsun", etc. and then searches the different mass folders (e.g. "0.15", "20", "300"), where LOGS directories are, within them**.
-
-If I will have time I will make it more customizable. **Remember to follow this structure.**
-
-The final outcome will be a dataframe with the entire population of stars, ready to analyze. 
-Integrated in the file, an HRD plotter is included to show the metallicity and mass distribution of the retrieved stars
-<img width="1383" height="674" alt="image" src="https://github.com/user-attachments/assets/5024ed03-7022-448f-8d7b-65c86922f185" />
-
-
-## Spiral Galaxy Modelling
+### Spiral Galaxy Modelling
 
 The code gives a membership probability for each star to be within one of the major Milky Way arms: Scutum-Centaurus, Perseus, Sagittarius-Carina, Norma-Outer, Local (Orion Spur). This is fully a guess work from the literature and model variations are invited. For each arm, as shown in the table below, various parameters from the literature are adopted to generate a distribution of angles as a function of age and radial positions.
 
@@ -107,5 +58,55 @@ In particular, the code defines introduces the concept of dynamical temperature,
 9. Sun Distance
 10. Galactocentric coordinate system
 11. [Xu+ (2016)](https://www.science.org/doi/10.1126/sciadv.1600878)
+
+### Code use and features
+
+With the generate_star_population function one will be able to draw a number of stars equal to the variable **NUM_STARS** from the given sampled distributions, while defining whether the thick, thin or both parts of the galactic disk are included and optionally saving the population as a CSV file.  
+
+With a good laptop, the samplers with a resolution of 25,000 bins were calculated and saved in less than an hour.
+While using them, **it took 30 seconds to generate 10<sup>6</sup> stars, 4 minutes to generate 10<sup>7</sup>, and 40 minutes to generate 10<sup>8</sup>**
+
+Here below the generated plots for a population of 10<sup>6</sup> stars.
+
+<img width="784" height="1720" alt="Distributions" src="https://github.com/user-attachments/assets/4ddc1e8c-c610-4779-b1cc-078f27797ee2" />
+
+
+From then on the file can be loaded within Section 1.1
+
+### Galaxy morphology visualization
+
+Without yet combining the drawn stars with evolutionary models, one could visualize in Section 1.2 the distribution of stars with a dynamical size adjustment for the scatter point sizes depending on the size of the stellar sample.
+*Making a scatter plot of many data points can considerably slow the code.* For $10^8$ stars a good laptop can take nearly an hour.
+
+> **Resolution comparison: [Click here to compare 1M vs 100M Star plots in Results.md](Results.md#1-galaxy-positions)**
+
+
+## Quantization
+
+The masses and metallicities of stars drawn by the given distributions likely don't match the discrete sample of stellar tracks that one owns. 
+For this reason, they must be binned to the closest match in the MESA sample in Section 1.3, where the available stellar masses and metallicities are listed.
+
+$\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity to [Fe/H]
+
+Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
+
+<img width="1651" height="1654" alt="quantization" src="https://github.com/user-attachments/assets/cb6e186c-d384-42c2-9d5e-7738af63a944" />
+
+
+## Stellar tracks processing
+
+Example stellar tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract) that can be used for a tutorial are available here **(link not yet available; still under review in Zenodo)**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
+Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.
+Similarly, SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. \
+Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
+
+In Section 1.3, the code combines MESA tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
+The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
+
+**Currently the code takes metallicity folders that are named in the format "1Zsun", "0.5Zsun", etc. and then searches the different mass folders (e.g. "0.15", "20", "300"), where LOGS directories are, within them. Remember to follow this structure.**
+
+The final outcome will be a dataframe with the entire population of stars, ready to be analyzed. 
+Integrated in the file, an Hertzprung-Russel diagram plotter is included to show the metallicity and mass distribution of the retrieved stars.
+> **Resolution and code comparison: [View the SSE vs. MESA benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**
 
 
