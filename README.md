@@ -68,7 +68,7 @@ Finally, the quantized dataframe is saved in its respective folder and ready to 
 
 ## MESA processing
 
-Example MESA tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract)) that can be used for a tutorial are available here: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
+Example MESA tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract) that can be used for a tutorial are available here (link not yet available; still under review in Zenodo): [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
 Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.
 Similarly, SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
 
