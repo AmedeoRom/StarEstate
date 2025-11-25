@@ -109,7 +109,7 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
                 else:
                     valid_group[col] = np.nan
 
-        # --- NEW: UNIFIED HIERARCHICAL STELLAR TYPE CLASSIFICATION ---
+        # --- UNIFIED HIERARCHICAL STELLAR TYPE CLASSIFICATION ---
 
         # Get all necessary data columns safely
         s_h1 = valid_group.get('surface_h1', pd.Series(np.nan, index=valid_group.index))
@@ -164,7 +164,6 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
         k_mask = (Teff >= 3700) & (Teff < 5200) & is_main_sequence
         m_mask = (Teff < 3700) & is_main_sequence
 
-        # Use np.select for efficient, hierarchical assignment.
         conditions = [
             wr_mask, naked_he_mask, rsg_mask, ysg_mask, agb_mask, hg_mask, rg_mask,
             o_mask, b_mask, a_mask, f_mask, g_mask, k_mask, m_mask
@@ -209,10 +208,7 @@ def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.014
     matched_groups = []
 
     for (mass, feh), group in quantized_df.groupby(['Mzams', 'Fe/H']):
-        # 1. Determine Metallicity Z for Merritt equations
-        # feh is [Fe/H] = log10(Z/Zsun) -> Z = Zsun * 10**feh
-        # The 'z_val' in folder names often scales differently, assuming z_val = 10**(feh*0.977)
-        # We use the calculated absolute Z for physics equations.
+        # 1. Determine Metallicity Z for Merritt+ (2025) equations
         z_multiplier = 10**(feh*0.977)
         Z_abs = Zsun * z_multiplier
 
@@ -258,14 +254,14 @@ def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.014
         closest_indices = _find_nearest_indices(model_ages_yrs, valid_star_ages)
 
         # 5. Extract Legacy Parameters
-        # Map legacy columns to standard names for consistency
+        # Map columns to standard names for consistency
         valid_group['log_L'] = legacy_data['logL'].values[closest_indices]
         valid_group['log_Teff'] = legacy_data['logTeff'].values[closest_indices]
         valid_group['Mass'] = legacy_data['M'].values[closest_indices]
         valid_group['Radius'] = legacy_data['R'].values[closest_indices] # Solar radii
         valid_group['Ka'] = legacy_data['Ka'].values[closest_indices].astype(int)
 
-        # 6. Unified Classification Logic (Mapping Ka -> String)
+        # 6. Unified Classification Logic
 
         # Prepare vectors
         Ka = valid_group['Ka']
@@ -292,7 +288,7 @@ def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.014
 
         if WR_cond == "any":
             # If any condition is met. Since Xsurf is assumed True for Ka 7-9,
-            # this makes ALL Ka 7-9 WRs, as well as some MS VMSs.
+            # this makes ALL Ka = 7-9 WRs, as well as some MS VMSs.
             wr_satisfied = cond_xsurf_met | cond_gamma_met | cond_eta_met
         elif WR_cond == "Xsurf":
             wr_satisfied = cond_xsurf_met
@@ -303,7 +299,7 @@ def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.014
         elif WR_cond == "gamma_eta":
             wr_satisfied = cond_gamma_met | cond_eta_met
         else:
-            wr_satisfied = cond_xsurf_met # Default fallthrough
+            wr_satisfied = cond_xsurf_met
 
         # Define Masks
 
@@ -369,94 +365,6 @@ def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.014
     final_df = pd.concat(matched_groups, ignore_index=True)
     print(f"Successfully matched and classified {len(final_df)} stars (Legacy).")
     return final_df
-
-def match_to_mesa_sims(quantized_df, base_path, mesa_cols_to_extract, Zsun = 0.0142):
-    """
-    Matches quantized stars to MESA simulation outputs and extracts physical parameters.
-
-    Args:
-        quantized_df (pd.DataFrame): DataFrame of stars with quantized mass and FeH.
-        base_path (str): The base directory path for the MESA simulations.
-        mesa_cols_to_extract (list): A list of column names to extract from history.data.
-
-    Returns:
-        pd.DataFrame: A new DataFrame containing the matched stars and their
-                      extracted MESA parameters. Returns None if mesa_reader is not available.
-    """
-    if not mr:
-        print("Error: mesa_reader is not installed. Cannot perform MESA matching.")
-        return None
-
-    print("\nMatching population to MESA simulations...")
-    results = []
-
-    # Group by the quantized parameters to process one MESA file at a time
-    for (mass, feh), group in quantized_df.groupby(['Mzams', 'Fe/H']):
-
-        # Construct the path to the MESA history.data file
-        # Use '%g' for smart formatting that removes trailing zeros.
-        z_val = 10**(feh*0.977)
-        z_folder = f"{z_val:g}Zsun"      # e.g., 0.1, 0.2, 0.45, 1
-        m_folder = f"{mass:g}"          # e.g., 1.25, 2, 10
-
-        print(f"Z = {z_val:g} Zsun; Mzams = {mass:g}")
-
-        history_path = os.path.join(base_path, z_folder, m_folder, "LOGS", "history.data")
-
-        if not os.path.exists(history_path):
-            # print(f"Warning: MESA file not found, skipping: {history_path}")
-            continue
-
-        # Load MESA data
-        m = mr.MesaData(history_path)
-        mesa_ages_yrs = m.star_age # MESA ages are in years
-
-        # For each star in the group that matches this MESA file
-        for index, star in group.iterrows():
-            star_age_yrs = star['Age [Gyr]'] * 1e9 # Convert Gyr to years
-
-            # Check if the star's age is within the MESA model's lifetime
-            if star_age_yrs <= mesa_ages_yrs[-1]:
-                # Find the index of the closest age in the MESA track
-                closest_mesa_idx = np.abs(mesa_ages_yrs - star_age_yrs).argmin()
-
-                # --- DATA ASSEMBLY ---
-                # 1. Start with a copy of all the original data for this star.
-                #    This dictionary already contains Mass, Age, FeH, Radius, and Z.
-                final_star_data = star.to_dict()
-
-                # 2. Extract the special and regular MESA parameters and add them
-                #    to the dictionary for our final output.
-                for col in mesa_cols_to_extract:
-                    if col == "log_Rzams":
-                        final_star_data[f"{col}"] = m.log_R[0]
-                    elif col == "log_Lzams":
-                        final_star_data[f"{col}"] = m.log_L[0]
-                    elif col == "log_Teffzams":
-                        final_star_data[f"{col}"] = m.log_Teff[0]
-                    elif col == "log_RMAX":
-                        final_star_data[f"{col}"] = np.max(m.log_R)
-                    elif col == "RMAX_logL":
-                        final_star_data[f"{col}"] = m.log_L[np.argmax(m.log_R)]
-                    elif col == "RMAX_logTeff":
-                        final_star_data[f"{col}"] = m.log_Teff[np.argmax(m.log_R)]
-                    elif col == "max_age":
-                        final_star_data[f"{col}"] = m.star_age[-1]
-                    else:
-                        # Default case for any other column
-                        final_star_data[f"{col}"] = m.data(col)[closest_mesa_idx]
-
-                # 3. Add the completed dictionary for this star to our results list.
-                results.append(final_star_data)
-
-    if not results:
-        print("Warning: No matching MESA files found or no stars fell within model age ranges.")
-        return None
-
-    print(f"Successfully matched {len(results)} stars to MESA tracks.")
-    return pd.DataFrame(results)
-
-
 
 def extract_stars(stellar_masses,masses_list, directory, Z_age):
 
@@ -529,13 +437,6 @@ def extract_stars(stellar_masses,masses_list, directory, Z_age):
                     star_para['Rmax_giant'].append(-1)
                     star_para['L_Rmax_giant'].append(-1)
 
-                # if HG_CHeB_i==-1 or evo_stages["MS"]==len(mesa_data["time"]):
-                    # star_para['L_WD'].append(-1)
-                    # star_para['rot_WD'].append(-1)
-                # else:
-                    # star_para['L_WD'].append(10**mesa_data.mesa_data["log_L"][-1])
-                    # star_para['rot_WD'].append(mesa_data.surf_avg_v_rot[-1])
-
         print("All the stars for {} M\u2609 done".format(Mzams))
 
 
@@ -585,8 +486,7 @@ def process_stars(stellar_masses,masses_list,directory):
             evo_stages[string] = last_index
 
         evo_stages_dict[str(stellar_masses[k])] = evo_stages
-        # print(stellar_masses[k],evo_stages)
-
+        
         evo_stages = {'ZAMS' : -1, 'MS' : -1, 'HG' : -1, 'CHeB' : -1, 'HeHG' : -1, 'CCB' : -1, 'COB' : -1}
 
     print("Stars processed \n")
