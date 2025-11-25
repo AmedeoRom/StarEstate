@@ -42,33 +42,27 @@ From then on the file can be loaded within Section 1.1
 
 ### Galaxy visualization
 
-Without yet combining the drawn stars with MESA models, one could visualize in Section 1.2 the distribution of stars. Here below:
+Without yet combining the drawn stars with evolutionary models, one could visualize in Section 1.2 the distribution of stars with a dynamical size adjustment for the scatter point sizes depending on the size of the stellar sample.
+*Making a scatter plot of many data points can considerably slow the code.* For $10^8$ stars a good laptop can take nearly an hour.
 
-**The disk of a spiral galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre. Different colors represent different arms
-<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/dd5d2d2f-4475-4d6a-bb98-c1ab99f9e76f" />
-
-
-
-**The disk of an elliptical galaxy with 10<sup>8</sup> stars**, with the yellow cross representing the galactic centre, and the color scale the radial coordinates. The vertical profile of the galaxy is mainly dark colors because in proportion there are more low-radius stars than the ones at the outer edges
-<img width="1760" height="899" alt="image" src="https://github.com/user-attachments/assets/eda23624-5f61-4fca-8f54-0a02ac408ad0" />
-
+> **Resolution Comparison: [Click here to compare 1M vs 100M Star plots in Results.md](Results.md#1-galaxy-positions)**
 
 
 ## Quantization
 
-The masses and metallicities of stars drawn by the given distributions may not match the discrete sample of MESA tracks that one owns. 
+The masses and metallicities of stars drawn by the given distributions likely don't match the discrete sample of MESA tracks that one owns. 
 For this reason, they must be binned to the closest match in the MESA sample in Section 1.3, where the available stellar masses and metallicities are listed.
 
 $\textcolor{red}{Metallicities\ are\ expressed\ as\ [Fe/H]}$ and therefore are converted, following Bertelli et al. 1994a, from fraction of solar metallicity into [Fe/H]
 
-Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 4 MESA metallicities
+Finally, the quantized dataframe is saved in its respective folder and ready to use. Here below an example with only 3 MESA metallicities
 
-<img width="1189" height="1173" alt="image" src="https://github.com/user-attachments/assets/8a0a9d4c-e50f-46dc-b6ad-e31e2f6884ad" />
+<img width="1651" height="1654" alt="quantization" src="https://github.com/user-attachments/assets/cb6e186c-d384-42c2-9d5e-7738af63a944" />
 
 
 ## MESA processing
 
-Example MESA tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract) that can be used for a tutorial are available here (link not yet available; still under review in Zenodo): [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
+Example MESA tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract) that can be used for a tutorial are available here **(link not yet available; still under review in Zenodo)**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
 Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.
 Similarly, SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
 
