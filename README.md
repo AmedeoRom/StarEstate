@@ -2,7 +2,7 @@
 A population synthesis tool to generate entire populations of single stars for the Milky Way or elliptical galaxies.
 
 IMF is taken from a Kroupa's broken power law.
-Lookback time, metallicity and galactic position distribution taken from Wagg et al. (2022), with the following changes:
+Lookback time, metallicity and galactic position distribution taken from [Wagg et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022ApJ...937..118W/abstract), with the following changes:
 
 - The metallicity distribution was renormalized to have a maximum of [Fe/H] = 0.5, i.e. roughly 3 times Solar metallicity
 - Depending on the chosen galaxy shape:
