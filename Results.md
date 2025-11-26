@@ -17,4 +17,4 @@ Comparison of stellar evolution tracks using SSE (Single Star Evolution) and MES
 | Evolution Code | 1 Million Stars | 100 Million Stars |
 | :--- | :---: | :---: |
 | **SSE** | <img width="1961" height="978" alt="HR_SSE_1M" src="https://github.com/user-attachments/assets/aff3a5cb-d2ce-4c4c-93c0-1114ae40ead2" /> | <img width="1961" height="978" alt="HR_SSE_100M" src="https://github.com/user-attachments/assets/255a4160-8078-4563-80b6-5caf4b1c6622" />|
-<!--| **MESA** | <img width="1961" height="978" alt="HR_MESA_1M" src="https://github.com/user-attachments/assets/17ec9a35-4242-4ec3-aaf9-541768c80b2d" /> | <img src="plots/hr_mesa_100m.png" width="400"> |-->
+| **MESA** | <img width="1961" height="978" alt="HR_MESA_1M" src="https://github.com/user-attachments/assets/99111db7-d2e8-4282-b8df-197c201d2585" /> | <img width="1961" height="978" alt="HR_MESA_1M" src="https://github.com/user-attachments/assets/17ec9a35-4242-4ec3-aaf9-541768c80b2d" /> |
