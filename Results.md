@@ -12,7 +12,9 @@ Yellow cross represents the galactic centre. For elliptical galaxies different c
 > **Observation:** Note that the scatter points increase in size as the stellar sample grows for visualization purposes
 
 ## 2. Hertzsprung-Russell (HR) Diagrams
-Comparison of stellar evolution tracks using SSE (Single Star Evolution) and MESA codes.
+Comparison of stellar evolution tracks using SSE (Single Star Evolution) and MESA codes. 
+
+The mass bins considered are [0.11, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] $M_\odot$
 
 | Evolution Code | 1 Million Stars | 100 Million Stars |
 | :--- | :---: | :---: |
