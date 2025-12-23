@@ -101,13 +101,34 @@ MESA tracks for this tutorial will be available soon after the submission of the
 SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. 
 Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
 
+**Currently the code takes metallicity folders that are named in the format "1Zsun", "0.5Zsun", etc. and then searches the different mass folders (e.g. "0.15", "20", "300"), where the LOGS directories (MESA) or the evolution.dat track files (SSE) are. Remember to follow this structure.**
+
+
+## Binary tracks processing
+
+BSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be generated in the BSE folder. 
+
+To transform the pre-calculated grid of models into a realistic, continuous population, the code applies statistical sampling to the binary parameters. It assigns a Mass Ratio (q) and an Initial Orbital Period (P) to each system using specific distributions:
+
+- Mass Ratio (q): Drawn from a Uniform distribution.
+- Initial Period: Drawn from either a log-uniform or log-power law distribution, depending on user configuration.
+
+This process de-facto expands the already-drawn quantized distribution of primary stars into a fully realized binary population.
+
+**Grid Structure**: Currently, the code expects the following directory hierarchy:
+1. Metallicity: Folders named "1Zsun", "0.5Zsun", etc.
+2. Primary Mass (M1​): Folders like "0.15", "20", "300".
+3. Mass Ratio (q=M2​/M1​): Folders like "q_0.1", "q_0.5".
+4. Initial Period (P): Folders representing log10​(days) (e.g., "per_0.5", "per_5") containing the evolution.dat tracks.
+
+*Note: StarEstate restricts the sampling to physically viable stars. It automatically redistributes probabilities to avoid drawing low-mass ratio binaries from low-mass primary stars, thereby preventing secondary components from falling into the brown-dwarf or planetary regime*
+
 In Section 1.3, the code combines stellar tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
 The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
 
-**Currently the code takes metallicity folders that are named in the format "1Zsun", "0.5Zsun", etc. and then searches the different mass folders (e.g. "0.15", "20", "300"), where LOGS directories are, within them. Remember to follow this structure.**
 
 The final outcome will be a dataframe with the entire population of stars, ready to be analyzed. 
 Integrated in the file, an Hertzprung-Russel diagram plotter is included to show the metallicity and mass distribution of the retrieved stars.
-<!-- **Resolution and code comparison: [View the SSE vs. MESA benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**-->
-> **Resolution comparison: [View the SSE benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**
+<!-- **Resolution and code comparison: [View the BSE vs. SSE vs. MESA benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**-->
+> **Resolution comparison: [View the BSE, SSE, MESA benchmarks in Results.md](Results.md#2-hertzsprung-russell-hr-diagrams)**
 
