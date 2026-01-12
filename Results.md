@@ -9,7 +9,7 @@ Yellow cross represents the galactic centre. For elliptical galaxies different c
 | **Elliptical** | <img width="1772" height="915" alt="gal_code_1M_elliptical" src="https://github.com/user-attachments/assets/afc3d5d1-221b-49bd-a16a-cd3287ffa777" /> | <img width="1772" height="915" alt="gal_code_100M_elliptical" src="https://github.com/user-attachments/assets/bf43c2aa-c63f-436c-b20c-275dfece5382" /> |
 | **Spiral** | <img width="1772" height="915" alt="gal_code_1M" src="https://github.com/user-attachments/assets/5aac0561-2e24-4b1d-b743-5af60340dd01" /> | <img width="1772" height="915" alt="gal_code_100M" src="https://github.com/user-attachments/assets/d4bb1fd3-9f55-44b4-a206-2d4a7377320d" /> |
 
-> **Observation:** Note that the scatter points increase in size as the stellar sample grows for visualization purposes
+> **Observation:** Note that the scatter points shrink in size as the stellar sample grows for visualization purposes
 
 ## 2. Hertzsprung-Russell (HR) Diagrams
 Comparison of stellar evolution tracks using SSE (Single Star Evolution), BSE (Binary Star Evolution) and MESA codes. 
