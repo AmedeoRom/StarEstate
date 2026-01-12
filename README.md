@@ -7,12 +7,12 @@ Lookback time, metallicity and galactic position distribution taken from [Wagg e
 - The metallicity distribution was renormalized to have a maximum of [Fe/H] = 0.5, i.e. roughly 3 times Solar metallicity
 - Depending on the chosen galaxy shape:
   - **"elliptical"** --> nothing changes in the galactic distribution. Uniform distribution of radial angles.
-  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. Deteails on spiral arms modelling at the end
+  - **"spiral"** --> every star is given a probability to be on a specific Milky Way arm. Details on spiral arms modelling at the end
 
 
 ## Samplers and efficient calculations
 
-Doing the **Inverse Transform Sampling** for the distrbutions of every population (MODE = 'generate_on_the_fly') requires extensive computational resources, since the code needs to numerically solve integrals for each star.
+Doing the **Inverse Transform Sampling** for the distributions of every population (MODE = 'generate_on_the_fly') requires extensive computational resources, since the code needs to numerically solve integrals for each star.
 
 The solution around this problem is the use of samplers that are saved in a dedicated directory and that already contain all the numerical solutions for the given initial distribution, and then loading it each time a new population needs to be drawn. This reduces the computational time of a population ~10<sup>6</sup> stars in a spiral galaxy from hours to few minutes. In the directory, a samplers for a spiral galaxy for an IMF between 0.11 and 100 $M_\odot$ and a resolution of 25,000 bins (across 4 different independent dimensions this represents $25,000^4$ $\approx$ 3.9 x $10^{17}$ combinations) is delivered as an example.
 
@@ -33,7 +33,7 @@ To load the samplers to generate the population.
 
 The code gives a membership probability for each star to be within one of the major Milky Way arms: Scutum-Centaurus, Perseus, Sagittarius-Carina, Norma-Outer, Local (Orion Spur). This is fully a guess work from the literature and model variations are invited. For each arm, as shown in the table below, various parameters from the literature are adopted to generate a distribution of angles as a function of age and radial positions.
 
-In particular, the code defines introduces the concept of dynamical temperature, or velocity dispertion, which is why different stellar populations trace the spiral arms with varying fidelity (e.g. [Mackereth+ 2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.489..176M/abstract)):
+In particular, the code introduces the concept of dynamical temperature, or velocity dispersion, which is why different stellar populations trace the spiral arms with varying fidelity (e.g. [Mackereth+ 2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.489..176M/abstract)):
 
 - **Young Tracers (Age < 100 Myr)**: Populations with very low velocity dispersion are considered dynamically "cold." This includes molecular gas clouds, HII regions, and the massive, young O and B-type stars recently formed from them. These components have orbits that are nearly circular and are easily perturbed by the gravitational potential of the spiral arms. As a result, they are tightly confined to the arms.
 - **Intermediate-Age Tracers (Age ~100 Myr – 1 Gyr)**: Stars in this age range, such as Classical Cepheids and young open clusters, are dynamically "warmer." Over their lifetimes, they have had time to drift from their birth sites within the arms. Their velocity dispersions have increased due to gravitational scattering off molecular clouds and the spiral arms themselves. Consequently, while they still show a clear concentration in the arms, their distribution is more dispersed than that of the youngest stars.
@@ -95,9 +95,8 @@ Finally, the quantized dataframe is saved in its respective folder and ready to 
 
 ## Stellar tracks processing
 
-<!--Example stellar tracks from [Romagnolo+ (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...964L..23R/abstract) that can be used for a tutorial are available here **(link not yet available; still under review in Zenodo)**: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17669656.svg)](https://doi.org/10.5281/zenodo.17669656).
-Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.-->
-MESA tracks for this tutorial will be available soon after the submission of the code paper.
+Example stellar tracks from [Romagnolo+ (2026)](https://ui.adsabs.harvard.edu/abs/2026arXiv260102263R/abstract) that can be used for a tutorial are available here: [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17913061-blue)](https://zenodo.org/records/17913061).
+Please download the `MESA_tracks.zip` file, extract it, and place the contents inside a `MESA Simulations` directory.
 SSE tracks from the [Romagnolo+ (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.525..706R/abstract) StarTrack models can be found in the SSE folder. 
 Both sets of tracks were taken until the simulated star becomes a white dwarf, exceeds 100 times the Hubble time, or ends its core-helium burning phase.
 
@@ -124,7 +123,7 @@ This process de-facto expands the already-drawn quantized distribution of primar
 *Note: StarEstate restricts the sampling to physically viable stars. It automatically redistributes probabilities to avoid drawing low-mass ratio binaries from low-mass primary stars, thereby preventing secondary components from falling into the brown-dwarf or planetary regime*
 
 In Section 1.3, the code combines stellar tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
-The code also give each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be choosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
+The code also gives each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be chosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
 
 
 The final outcome will be a dataframe with the entire population of stars, ready to be analyzed. 
