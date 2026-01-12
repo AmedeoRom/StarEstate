@@ -15,7 +15,9 @@ Yellow cross represents the galactic centre. For elliptical galaxies different c
 Comparison of stellar evolution tracks using SSE (Single Star Evolution), BSE (Binary Star Evolution) and MESA codes. 
 
 The mass bins considered are [0.11, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] $M_\odot$
+
 The logP bins considered are [0.15, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5]
+
 The q bins considered are [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
 
 **SSE vs BSE: not that the BSE plots contain more data points and are more heterogeneous because they contain binaries, i.e. twice the number of stars, and because the q ratio offers more stellar tracks on the HR diagram, on top of all the binary products**
