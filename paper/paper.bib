@@ -1,0 +1,216 @@
+---
+
+### 2. Fix `paper.bib`
+I have stripped the `abstract` fields from this file. JOSS does not display abstracts in the bibliography, and the special characters inside them (like `±` and `≲`) were breaking the compilation.
+
+Replace your current `paper.bib` content with this **safe** version:
+
+```bibtex
+@article{harris2020array,
+  title={Array programming with {NumPy}},
+  author={Harris, Charles R and Millman, K Jarrod and van der Walt, St{'e}fan J and others},
+  journal={Nature},
+  volume={585},
+  number={7825},
+  pages={357--362},
+  year={2020},
+  publisher={Nature Publishing Group}
+}
+
+@article{Hurley_2000,
+    author = {Hurley, Jarrod R. and Pols, Onno R. and Tout, Christopher A.},
+    title = "{Comprehensive analytic formulae for stellar evolution as a function of mass and metallicity}",
+    journal = {Monthly Notices of the Royal Astronomical Society},
+    volume = {315},
+    number = {3},
+    pages = {543-569},
+    year = {2000},
+    month = {07},
+    abstract = "{We present analytic formulae that approximate the evolution of stars for a wide range of mass M and metallicity Z. Stellar luminosity, radius and core mass are given as a function of age, M and Z, for all phases from the zero-age main sequence up to, and including, the remnant stages. For the most part we find continuous formulae accurate to within 5 per cent of detailed models. These formulae are useful for purposes such as population synthesis that require very rapid but accurate evaluation of stellar properties, and in particular for use in combination with N-body codes. We describe a mass-loss prescription that can be used with these formulae, and investigate the resulting stellar remnant distribution.}",
+    issn = {0035-8711},
+    doi = {10.1046/j.1365-8711.2000.03426.x},
+    url = {https://doi.org/10.1046/j.1365-8711.2000.03426.x},
+    eprint = {https://academic.oup.com/mnras/article-pdf/315/3/543/2936345/315-3-543.pdf},
+}
+
+@article{virtanen2020scipy,
+  title={{SciPy} 1.0: fundamental algorithms for scientific computing in Python},
+  author={Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E and others},
+  journal={Nature methods},
+  volume={17},
+  number={3},
+  pages={261--272},
+  year={2020},
+  publisher={Nature Publishing Group}
+}
+
+@article{ExistingTool2020,
+  title={An example citation for a related tool},
+  author={Doe, Jane and Smith, John},
+  journal={Journal of Example Research},
+  year={2020},
+  publisher={Example Publisher}
+}
+
+@article{Wagg_2022,
+  doi = {10.3847/1538-4357/ac8675},
+  year = {2022},
+  publisher = {The American Astronomical Society},
+  volume = {937},
+  number = {2},
+  pages = {118},
+  author = {Wagg, T. and Broekgaarden, F. S. and de Mink, S. E. and others},
+  title = {Gravitational Wave Sources in Our Galactic Backyard},
+  journal = {The Astrophysical Journal}
+}
+
+@article{Reid_2019,
+  doi = {10.3847/1538-4357/ab4a11},
+  year = {2019},
+  publisher = {The American Astronomical Society},
+  volume = {885},
+  number = {2},
+  pages = {131},
+  author = {Reid, M. J. and Menten, K. M. and Brunthaler, A. and others},
+  title = {Trigonometric Parallaxes of High-mass Star-forming Regions},
+  journal = {The Astrophysical Journal}
+}
+
+@ARTICLE{Bertelli_1994,
+  author = {{Bertelli}, G. and {Bressan}, A. and {Chiosi}, C. and {Fagotto}, F. and {Nasi}, E.},
+  title = "{Theoretical isochrones from models with new radiative opacities}",
+  journal = {AAPS},
+  year = 1994,
+  volume = {106},
+  pages = {275-302}
+}
+
+@ARTICLE{Paxton_2011,
+  author = {{Paxton}, B. and {Bildsten}, L. and {Dotter}, A. and others},
+  title = {{Modules for Experiments in Stellar Astrophysics (MESA)}},
+  journal = {ApJs},
+  year = {2011},
+  volume = {192},
+  pages = {3},
+  doi = {10.1088/0067-0049/192/1/3}
+}
+
+@article{Paxton_2013,
+  doi = {10.1088/0067-0049/208/1/4},
+  year = 2013,
+  volume = {208},
+  number = {1},
+  pages = {4},
+  journal = {ApJs},
+  author = {{Paxton}, B. and {Marchant}, P. and {Schwab}, J. and others},
+  title = {{MODULES} {FOR} {EXPERIMENTS} {IN} {STELLAR} {ASTROPHYSICS} ({MESA})}
+}
+
+@ARTICLE{Paxton_2015,
+  author = {{Paxton}, B. and {Marchant}, P. and {Schwab}, J. and others},
+  title = {{Modules for Experiments in Stellar Astrophysics (MESA): Binaries, Pulsations, and Explosions}},
+  journal = {ApJs},
+  year = {2015},
+  volume = {220},
+  pages = {15},
+  doi = {10.1088/0067-0049/220/1/15}
+}
+
+@ARTICLE{Paxton_2018,
+  author = {{Paxton}, B. and {Schwab}, J. and {Bauer}, E.~B. and others},
+  title = {{Modules for Experiments in Stellar Astrophysics (MESA): Convective Boundaries, Element Diffusion, and Massive Star Explosions}},
+  journal = {ApJs},
+  year = {2018},
+  volume = {234},
+  pages = {34},
+  doi = {10.3847/1538-4365/aaa5a8}
+}
+
+@ARTICLE{Paxton_2019,
+  author = {{Paxton}, B. and {Smolec}, R. and {Schwab}, Josiah and others},
+  title = "{Modules for Experiments in Stellar Astrophysics (MESA): Pulsating Variable Stars, Rotation, Convective Boundaries, and Energy Conservation}",
+  journal = {ApJs},
+  year = "2019",
+  volume = {243},
+  number = {1},
+  pages = {10},
+  doi = {10.3847/1538-4365/ab2241}
+}
+
+@article{Jermyn_2023,
+  doi = {10.3847/1538-4365/acae8d},
+  year = {2023},
+  publisher = {The American Astronomical Society},
+  volume = {265},
+  number = {1},
+  pages = {15},
+  author = {Adam S. Jermyn and Evan B. Bauer and Josiah Schwab and others},
+  title = {Modules for Experiments in Stellar Astrophysics (MESA)},
+  journal = {The Astrophysical Journal Supplement Series}
+}
+
+@ARTICLE{Mackereth_2019,
+  author = {{Mackereth}, J. Ted and {Bovy}, Jo and {Leung}, Henry W. and others},
+  title = "{Dynamical heating across the Milky Way disc using APOGEE and Gaia}",
+  journal = {MNRAS},
+  year = 2019,
+  volume = {489},
+  number = {1},
+  pages = {176-195},
+  doi = {10.1093/mnras/stz1521}
+}
+
+@ARTICLE{Kroupa_1993,
+  author = {{Kroupa}, Pavel and {Tout}, Christopher A. and {Gilmore}, Gerard},
+  title = "{The Distribution of Low-Mass Stars in the Galactic Disc}",
+  journal = {MNRAS},
+  year = 1993,
+  volume = {262},
+  pages = {545-587},
+  doi = {10.1093/mnras/262.3.545}
+}
+
+@ARTICLE{Kroupa_2002,
+  author = {{Kroupa}, Pavel},
+  title = "{The Initial Mass Function of Stars: Evidence for Uniformity in Variable Systems}",
+  journal = {Science},
+  year = 2002,
+  volume = {295},
+  number = {5552},
+  pages = {82-91},
+  doi = {10.1126/science.1067524}
+}
+
+@article{Bobylev_2013,
+  author = {Bobylev, V. V. and Bajkova, A. T.},
+  title = {The Milky Way spiral structure parameters from data on masers and selected open clusters},
+  journal = {MNRAS},
+  volume = {437},
+  number = {2},
+  pages = {1549-1553},
+  year = {2013},
+  doi = {10.1093/mnras/stt1987}
+}
+
+@article{Vallee_2017,
+  title={A guided map to the spiral arms in the galactic disk of the Milky Way},
+  volume={13},
+  number={3-4},
+  journal={Astronomical Review},
+  publisher={Informa UK Limited},
+  author={Vallée, Jacques P.},
+  year={2017},
+  pages={113--146},
+  DOI={10.1080/21672857.2017.1379459}
+}
+
+@article{Xu_2016,
+  author = {Ye Xu and Mark Reid and Thomas Dame and others},
+  title = {The local spiral structure of the Milky Way},
+  journal = {Science Advances},
+  volume = {2},
+  number = {9},
+  pages = {e1600878},
+  year = {2016},
+  doi = {10.1126/sciadv.1600878}
+}
