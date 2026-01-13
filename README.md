@@ -120,7 +120,8 @@ This process de-facto expands the already-drawn quantized distribution of primar
 3. Mass Ratio (q=M2​/M1​): Folders like "q_0.1", "q_0.5".
 4. Initial Period (P): Folders representing log10​(days) (e.g., "per_0.5", "per_5") containing the evolution.dat tracks.
 
-*Note: StarEstate restricts the sampling to physically viable stars. It automatically redistributes probabilities to avoid drawing low-mass ratio binaries from low-mass primary stars, thereby preventing secondary components from falling into the brown-dwarf or planetary regime*
+> [!CAUTION]
+> StarEstate restricts the sampling to physically viable stars. It automatically redistributes probabilities to avoid drawing low-mass ratio binaries from low-mass primary stars, thereby preventing secondary components from falling into the brown-dwarf or planetary regime
 
 In Section 1.3, the code combines stellar tracks with the drawn population, for which at each age it gives the simulated stellar parameters. Any object past its total lifetime is automatically discarded.
 The code also gives each star a stellar type following the Morgan-Keenan (MK) spectral classification, which uses temperature for spectral type (O, B, A, F, G, K, M) and luminosity/evolutionary state to distinguish between main-sequence dwarfs, giants, and supergiants. Additionally, the code determines whether a star is a YSG, RSG, HG, naked He, or Wolf-Rayet (WR) star. For the WR star phase, a series of different methods can be chosen, based on one or more conditions like surface-H abundance, closeness to the free-electron scattering Eddington limit, or the wind efficiency factor (see more in the upcoming paper Romagnolo+ 2025b).
