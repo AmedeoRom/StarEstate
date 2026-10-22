@@ -22,7 +22,7 @@ from astropy import constants as const
 print_details=0
 
 #==================================================================
-# MESA SIMULATION MATCHING FUNCTION
+# HELPER FUNCTIONS
 #==================================================================
 def _find_nearest_indices(sorted_grid, values):
     """A helper function to find the indices of the nearest values in a sorted grid."""
@@ -43,22 +43,257 @@ def _find_nearest_indices(sorted_grid, values):
     # Return the indices of the closer neighbors
     return np.where(is_left_closer, indices - 1, indices)
 
-def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_cond="any"):
+def _generate_binary_params(df, q_grid, p_grid, q_dist_type="uniform", p_dist_type="power_law_Sana2025", min_mass=0.11):
     """
-    Matches quantized stars to MESA simulations using a fast, vectorized approach.
-    It classifies stars into multiple detailed types (WR, RSG, OB, A, Dwarfs, etc.)
-    into a single 'stellar_type' column based on a physically motivated hierarchy.
+    Generates 'q' and 'Period' columns for the dataframe based on specified distributions
+    and snaps the values to the nearest available grid points.
 
     Args:
-        quantized_df (pd.DataFrame): DataFrame of stars with quantized mass and FeH.
-        base_path (str): The base directory path for the MESA simulations.
-        mesa_cols_to_extract (list): A list of column names to extract from history.data.
-        WR_cond (str): The condition to classify a star as Wolf-Rayet ('WR').
-                       Options: "Xsurf", "eta", "gamma", "gamma_eta", "any".
+        df (pd.DataFrame): Input dataframe.
+        q_grid (np.array): Array of available q values.
+        p_grid (np.array): Array of available logP values.
+        q_dist_type (str): 'uniform', 'other'.
+        p_dist_type (str): 'uniform', 'power_law','power_law_Sana2025'.
 
     Returns:
-        pd.DataFrame: A new DataFrame containing the matched stars, their
-                      extracted MESA parameters, and a new 'stellar_type' column.
+        pd.DataFrame: Dataframe with added 'q' and 'Period' columns.
+    """
+    n = len(df)
+
+    # --- Generate q (Mass Ratio) ---
+    # 1. Calculate the minimum valid q for each star: q_min = min_mass / Mzams
+    # 2. Clip it to ensure it stays within the grid bounds.
+    #    CRITICAL: If Mzams is very small (e.g. < min_mass), the required q would be > 1.0.
+    #    We must clip this to the maximum available q in the grid (e.g. 1.0 or 0.9)
+    #    to avoid generating invalid mass ratios.
+    min_q_per_star = np.clip(min_mass / df['Mzams'].values, q_grid.min(), q_grid.max())
+
+    # --- Generate q (Mass Ratio) ---
+    if q_dist_type == "uniform":
+        # Continuous uniform [min, max], then snap to grid
+        # We generate a random number 0-1 and scale it to the valid range for each star
+        u = np.random.random(n)
+        q_max_grid = q_grid.max()
+        range_width = q_max_grid - min_q_per_star
+        raw_vals = min_q_per_star + (u * range_width)
+
+        # Snap to grid
+        idx = _find_nearest_indices(q_grid, raw_vals)
+        df['q'] = q_grid[idx]
+
+        # --- SAFETY CHECK ---
+        # Snapping to 'nearest' might round down (e.g. 0.16 -> 0.1).
+        # If that pushes M2 below min_mass, we must force it up to the next grid point.
+        # We use a small tolerance (0.001) for float comparison.
+        actual_m2 = df['q'] * df['Mzams']
+        invalid_mask = actual_m2 < (min_mass - 0.001)
+
+        if invalid_mask.any():
+            # For these rows, we bump the index up by 1 to select the next higher q.
+            # np.minimum ensures we don't go out of bounds if we are already at max q.
+            # If we are at max q and M2 is still < min_mass (because M1 is tiny),
+            # it stays at max q (best effort).
+            new_idx = np.minimum(idx[invalid_mask] + 1, len(q_grid) - 1)
+            df.loc[invalid_mask, 'q'] = q_grid[new_idx]
+
+    elif q_dist_type == "other":
+        # Placeholder for other q distributions (e.g. f(q) ~ q^0)
+        # For now, default to uniform logic
+        print("Warning: 'other' q_dist_type not implemented. Using uniform selection.")
+        raw_vals = np.random.uniform(q_grid.min(), q_grid.max(), n)
+        idx = _find_nearest_indices(q_grid, raw_vals)
+        df['q'] = q_grid[idx]
+
+    else:
+        # Default fallback
+        print(f"Warning: Unknown q_dist_type '{q_dist_type}'. Using uniform.")
+        raw_vals = np.random.uniform(q_grid.min(), q_grid.max(), n)
+        idx = _find_nearest_indices(q_grid, raw_vals)
+        df['q'] = q_grid[idx]
+
+
+    # --- Generate Period (logP) ---
+    # Note: The directory structure uses 'per_{val}', which corresponds to logP grid values.
+
+    if p_dist_type == "uniform":
+        # Continuous uniform on logP [min, max], then snap
+        raw_vals = np.random.uniform(p_grid.min(), p_grid.max(), n)
+        idx = _find_nearest_indices(p_grid, raw_vals)
+        df['Period'] = p_grid[idx]
+
+    elif "power_law"  in p_dist_type:
+        # Sana et al. style: f(logP) ~ (logP)^alpha
+        # log(P) in [0.5, 5.5] with exponent alpha = -0.55 (Sana et al. 2012; de Mink & Belczynski 2015)
+        if p_dist_type == "power_law":
+            alpha = -0.55
+        if p_dist_type == "power_law_Sana2025":
+            alpha = -0.1
+        # Use grid bounds or hardcoded standard? usually better to use grid bounds for consistency
+        vmin, vmax = np.min(p_grid), np.max(p_grid)
+
+        # Inverse transform sampling
+        # CDF(x) ~ x^(alpha+1)
+        u = np.random.random(n)
+        norm_factor = (vmax**(alpha+1) - vmin**(alpha+1))
+        raw_vals = (u * norm_factor + vmin**(alpha+1))**(1/(alpha+1))
+
+        # Snap to grid
+        idx = _find_nearest_indices(p_grid, raw_vals)
+        df['Period'] = p_grid[idx]
+
+    else:
+        # Default fallback
+        print(f"Warning: Unknown p_dist_type '{p_dist_type}'. Using uniform.")
+        raw_vals = np.random.uniform(p_grid.min(), p_grid.max(), n)
+        idx = _find_nearest_indices(p_grid, raw_vals)
+        df['Period'] = p_grid[idx]
+
+    return df
+
+def _classify_legacy_rows(df, WR_cond, Z_abs, use_orig_thick_winds=False):
+    """
+    Helper function to apply unified stellar type classification to a dataframe
+    containing Legacy (BSE/SSE) parameters (Ka, log_L, log_Teff, Mass).
+
+    Args:
+        df (pd.DataFrame): Dataframe with 'Ka', 'log_L', 'log_Teff', 'Mass'.
+        WR_cond (str): Wolf-Rayet condition string.
+        Z_abs (float): Absolute metallicity for the group.
+        use_orig_thick_winds (bool): If True, dynamically determines WR condition from 'thick_winds_trans_condition' column.
+
+    Returns:
+        pd.DataFrame: The input dataframe with a new 'stellar_type' column.
+    """
+    # Prepare vectors
+    Ka = df['Ka']
+    log_L = df['log_L']
+    log_Teff = df['log_Teff']
+    mass_current = df['Mass']
+    Teff = 10**log_Teff
+    L = 10**log_L
+
+    # --- WR / Naked Helium Logic ---
+    # Check if detailed transition values from BSE/SSE winds are present
+    has_detailed_vars = all(col in df.columns for col in ['Gamma_e', 'eta', 'xsurf', 'Gamma_e_trans', 'eta_trans'])
+
+    if has_detailed_vars:
+        gamma_e = df['Gamma_e']
+        gamma_trans = df['Gamma_e_trans'] if 'Gamma_e_trans' in df.columns else 0.5
+        eta = df['eta']
+        eta_trans = df['eta_trans']
+        xsurf = df['xsurf']
+
+        cond_xsurf_met = xsurf < 0.4
+        cond_gamma_met = gamma_e > gamma_trans
+        cond_eta_met = eta > eta_trans
+    else:
+        # Fallback approximation (Merritt 2025)
+        # Equation 1: Gamma_e = 2.49e-5 * L * M^-1 (Solar units)
+        gamma_e = 2.49e-5 * L * (mass_current**-1)
+        cond_gamma_met = gamma_e > 0.5
+
+        # Equation 5 (Switch Luminosity for Eta condition): L_switch = 10^2.36 * Z^-1.91
+        l_switch = (10**2.36) * (Z_abs**-1.91)
+        cond_eta_met = L > l_switch
+
+        # Without detailed tracking, we cannot strictly evaluate xsurf < 0.4, defaulting to False
+        cond_xsurf_met = pd.Series(False, index=df.index)
+
+    # Legacy Option (SSE standard logic for WR / Naked Helium)
+    cond_sse_met = (Ka.isin([7, 8, 9])) | (log_Teff > 4.4)
+
+    # Evaluation Booleans
+    if use_orig_thick_winds:
+        if 'thick_winds_trans_condition' in df.columns:
+            trans_cond = df['thick_winds_trans_condition'].astype(str)
+            wr_satisfied = (
+                ((trans_cond == "gamma") & cond_gamma_met) |
+                ((trans_cond == "eta") & cond_eta_met) |
+                ((trans_cond.isin(["Xsurf", "xsurf"])) & cond_xsurf_met)
+            )
+        else:
+            wr_satisfied = cond_sse_met
+    else:
+        if WR_cond == "any":
+            wr_satisfied = cond_xsurf_met | cond_gamma_met | cond_eta_met | cond_sse_met
+        elif WR_cond == "Xsurf":
+            wr_satisfied = cond_xsurf_met
+        elif WR_cond == "gamma":
+            wr_satisfied = cond_gamma_met
+        elif WR_cond == "eta":
+            wr_satisfied = cond_eta_met
+        elif WR_cond == "gamma_eta":
+            wr_satisfied = cond_gamma_met | cond_eta_met
+        elif WR_cond == "SSE":
+            wr_satisfied = cond_sse_met
+        else:
+            wr_satisfied = cond_sse_met
+
+    # Define Masks
+
+    # 1. WR Stars: Any star satisfying the physical WR conditions
+    # This captures classic WRs (Ka 7-9 + hot) AND potential pre-WR stripped stars
+    wr_mask = wr_satisfied
+
+    # 2. Naked Helium: Stars that are explicitly naked helium (Ka 7-9)
+    # but did NOT satisfy the WR condition (e.g. too cool/dim)
+    naked_he_mask = Ka.isin([7, 8, 9]) & (~wr_mask)
+
+    # 3. Supergiants (Luminous & Evolved & Still H-rich)
+    is_post_ms = Ka.isin([2, 3, 4, 5, 6])
+    is_luminous = log_L > 4.0
+    rsg_mask = is_post_ms & is_luminous & (Teff < 4000)
+    ysg_mask = is_post_ms & is_luminous & (Teff >= 4000) & (Teff < 7500)
+
+    # 4. AGB (Ka 5, 6)
+    agb_mask = Ka.isin([5, 6]) & (~rsg_mask) & (~ysg_mask)
+
+    # 5. Hertzsprung Gap (Ka 2)
+    hg_mask = (Ka == 2) & (~rsg_mask) & (~ysg_mask)
+
+    # 6. Red Giants (Ka 3 = GB, Ka 4 = CHeB)
+    rg_mask = Ka.isin([3, 4]) & (Teff < 5200) & (~rsg_mask) & (~ysg_mask)
+
+    # 7. Main Sequence (Ka 0, 1)
+    is_main_sequence = Ka.isin([0, 1])
+    o_mask = (Teff >= 30000) & is_main_sequence
+    b_mask = (Teff >= 10000) & (Teff < 30000) & is_main_sequence
+    a_mask = (Teff >= 7500) & (Teff < 10000) & is_main_sequence
+    f_mask = (Teff >= 6000) & (Teff < 7500) & is_main_sequence
+    g_mask = (Teff >= 5200) & (Teff < 6000) & is_main_sequence
+    k_mask = (Teff >= 3700) & (Teff < 5200) & is_main_sequence
+    m_mask = (Teff < 3700) & is_main_sequence
+
+    # 8. Remnants
+    wd_mask = Ka.isin([10, 11, 12])
+    ns_mask = (Ka == 13)
+    bh_mask = (Ka == 14)
+
+    conditions = [
+        bh_mask, ns_mask, wd_mask,  # <--- Evaluated First
+        wr_mask, naked_he_mask, rsg_mask, ysg_mask, agb_mask, hg_mask, rg_mask,
+        o_mask, b_mask, a_mask, f_mask, g_mask, k_mask, m_mask
+    ]
+    choices = [
+        "Black_Hole", "Neutron_Star", "White_Dwarf", # BH is index 0, NS is 1, WD is 2
+        "WR", "naked_He", "RSG", "YSG", "AGB", "HG_star", "Red_Giant",
+        "O-type (MS)", "B-type (MS)", "A-type (MS)", "F-type (MS)", "G-type (Yellow Dwarf)",
+        "K-type (Orange Dwarf)", "M-type (Red Dwarf)"
+    ]
+
+    df['stellar_type'] = np.select(conditions, choices, default="Other_Evolved")
+    return df
+
+#==================================================================
+# MESA SIMULATION MATCHING FUNCTION
+#==================================================================
+
+def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_cond="Xsurf", no_WR=False):
+    """
+    Matches quantized stars to MESA simulations.
+
+    Args include:
+        no_WR (bool): If True, filters out stars classified as Wolf-Rayet.
     """
     if not mr:
         print("Error: mesa_reader is not installed. Cannot perform MESA matching.")
@@ -67,7 +302,6 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
     print(f"\nMatching population to MESA simulations (vectorized) with WR_cond='{WR_cond}'...")
     matched_groups = []
 
-    # Define all columns needed for ANY classification
     wr_classification_cols = {'surface_h1', 'eta', 'eta_trans', 'gamma_edd'}
     general_classification_cols = {'log_Teff', 'log_L', 'center_h1', 'center_he4'}
     all_classification_cols = wr_classification_cols.union(general_classification_cols)
@@ -109,9 +343,7 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
                 else:
                     valid_group[col] = np.nan
 
-        # --- UNIFIED HIERARCHICAL STELLAR TYPE CLASSIFICATION ---
-
-        # Get all necessary data columns safely
+        # --- UNIFIED HIERARCHICAL STELLAR TYPE CLASSIFICATION (MESA SPECIFIC) ---
         s_h1 = valid_group.get('surface_h1', pd.Series(np.nan, index=valid_group.index))
         eta = valid_group.get('eta', pd.Series(np.nan, index=valid_group.index))
         eta_trans = valid_group.get('eta_trans', pd.Series(np.nan, index=valid_group.index))
@@ -122,9 +354,6 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
         center_he4 = valid_group.get('center_he4', pd.Series(np.nan, index=valid_group.index))
         Teff = 10**log_Teff
 
-        # --- Define boolean masks for each classification condition ---
-
-        # Priority 1: Wolf-Rayet and naked Helium conditions
         wr_mask = pd.Series(False, index=valid_group.index)
         if WR_cond == "Xsurf": wr_mask = (s_h1 < 0.4)
         elif WR_cond == "eta": wr_mask = (eta > eta_trans)
@@ -136,26 +365,14 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
         if WR_cond not in ["any", "Xsurf"]:
             naked_he_mask = (~wr_mask) & (s_h1 < 0.4)
 
-        # Priority 2: Supergiants (must be evolved AND highly luminous)
         is_evolved = (center_h1 < 1e-3)
         is_luminous = (log_L > 4.0)
         rsg_mask = (Teff < 4000) & is_luminous & is_evolved
         ysg_mask = (Teff >= 4000) & (Teff < 7500) & is_luminous & is_evolved
-
-        # Priority 3: AGB Stars
-        # Criteria: Evolved, Core Helium Exhausted (center_he4 < 0.01), and NOT classified as RSG/YSG above.
-        # Note: Some very luminous AGBs might get caught in RSG above.
         agb_mask = is_evolved & (center_he4 < 0.01) & (~is_luminous)
-
-        # Priority 4: Hertzsprung Gap (post-MS, pre-CHeB, not a supergiant)
         hg_mask = is_evolved & (center_he4 > 0.95) & (~is_luminous)
-
-        # Priority 5: Red Giants (evolved, cool, but not supergiants)
         rg_mask = (Teff < 5200) & (~is_luminous) & is_evolved
-
-        # Priority 6: Main Sequence Stars
         is_main_sequence = (center_h1 >= 1e-3)
-
         o_mask = (Teff >= 30000) & is_main_sequence
         b_mask = (Teff >= 10000) & (Teff < 30000) & is_main_sequence
         a_mask = (Teff >= 7500) & (Teff < 10000) & is_main_sequence
@@ -176,70 +393,50 @@ def match_to_mesa_sims_fast(quantized_df, base_path, mesa_cols_to_extract, WR_co
 
         valid_group['stellar_type'] = np.select(conditions, choices, default="Other_Evolved")
 
+        # --- APPLY FILTERS ---
+        if no_WR:
+            valid_group = valid_group[valid_group['stellar_type'] != 'WR']
+
         matched_groups.append(valid_group)
 
     if not matched_groups:
-        print("Warning: No matching MESA files found or no stars fell within model age ranges.")
+        print("Warning: No matching MESA files found or all filtered out.")
         return None
 
     final_df = pd.concat(matched_groups, ignore_index=True)
     print(f"Successfully matched and classified {len(final_df)} stars.")
     return final_df
 
-def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.0142):
+def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.0142, no_WR=False, no_compactOBJ=False, use_orig_thick_winds=False):
     """
-    Matches quantized stars to Legacy (Hurley/BSE/SSE style) simulations.
-    Parses 'evolution.dat' files and maps 'Ka' (stellar type) integers to
-    the string-based classification system used in MESA matching.
-
-    Implements specific WR/Naked Helium conditions based on Merritt et al. (2025).
+    Matches quantized stars to Legacy (Hurley/SSE style) simulations.
 
     Args:
-        quantized_df (pd.DataFrame): DataFrame of stars with quantized mass and FeH.
-        base_path (str): The base directory path. Assumes structure: base_path/Z/M/evolution.dat
-        WR_cond (str): "Xsurf", "eta", "gamma", "gamma_eta", or "any".
-                       Controls which conditions distinguish WR from naked_He.
-        Zsun (float): Solar metallicity fraction (default 0.0142).
-
-    Returns:
-        pd.DataFrame: DataFrame with legacy parameters and 'stellar_type' column.
+        no_WR (bool): If True, filters out stars classified as Wolf-Rayet.
+        no_compactOBJ (bool): If True, filters out stars with K > 9 (WDs, NS, BH).
+                              Always filters out K > 14 (massless/SN remnants).
     """
     print(f"\nMatching population to LEGACY simulations with WR_cond='{WR_cond}'...")
     matched_groups = []
 
     for (mass, feh), group in quantized_df.groupby(['Mzams', 'Fe/H']):
-        # 1. Determine Metallicity Z for Merritt+ (2025) equations
         z_multiplier = 10**(feh*0.977)
         Z_abs = Zsun * z_multiplier
-
-        # 2. Locate evolution.dat
-        # Assuming folder structure: base_path / <z_multiplier>Zsun / <mass> / evolution.dat
-        # e.g. /data/0.02Zsun/15/evolution.dat
         evo_path = os.path.join(base_path, f"{z_multiplier:g}Zsun", f"{mass:g}", "evolution.dat")
 
         if not os.path.exists(evo_path):
             continue
 
-        # 3. Read Legacy Data
         try:
-            # Reads: t Ka M R logL logTeff
-            legacy_data = pd.read_csv(evo_path, delim_whitespace=True)
-
-            if legacy_data.empty:
-                continue
-
-            # Filter out rows where logL is -99 (invalid/terminated steps)
+            legacy_data = pd.read_csv(evo_path, sep=r'\s+')
+            if legacy_data.empty: continue
             legacy_data = legacy_data[legacy_data['logL'] != -99]
-
-            # Check if data is empty after filtering
-            if legacy_data.empty:
-                continue
+            if legacy_data.empty: continue
         except Exception as e:
             print(f"Error reading {evo_path}: {e}")
             continue
 
-        # 4. Match Ages
-        model_ages_yrs = legacy_data['t'].values * 1e6 # Legacy 't' is usually in Myr
+        model_ages_yrs = legacy_data['t'].values * 1e6
         max_model_age = model_ages_yrs[-1]
 
         star_ages_yrs = group['Age [Gyr]'].values * 1e9
@@ -250,121 +447,287 @@ def match_to_legacy_sims_fast(quantized_df, base_path, WR_cond="any", Zsun=0.014
             continue
 
         valid_star_ages = star_ages_yrs[valid_age_mask]
-        # Find nearest indices
         closest_indices = _find_nearest_indices(model_ages_yrs, valid_star_ages)
 
-        # 5. Extract Legacy Parameters
-        # Map columns to standard names for consistency
+        # Extract Parameters
         valid_group['log_L'] = legacy_data['logL'].values[closest_indices]
         valid_group['log_Teff'] = legacy_data['logTeff'].values[closest_indices]
         valid_group['Mass'] = legacy_data['M'].values[closest_indices]
-        valid_group['Radius'] = legacy_data['R'].values[closest_indices] # Solar radii
-        valid_group['Ka'] = legacy_data['Ka'].values[closest_indices].astype(int)
+        valid_group['Radius'] = legacy_data['R'].values[closest_indices]
 
-        # 6. Unified Classification Logic
+        ka_values = legacy_data['Ka'].values[closest_indices].astype(int)
+        valid_group['Ka'] = ka_values
 
-        # Prepare vectors
-        Ka = valid_group['Ka']
-        log_L = valid_group['log_L']
-        log_Teff = valid_group['log_Teff']
-        mass_current = valid_group['Mass']
-        Teff = 10**log_Teff
-        L = 10**log_L
+        # --- FILTER 1: Compact Objects ---
+        # "Always make it skip with K > 14" -> Filter K <= 14
+        # "no_compactOBJ" -> Filter K <= 9
 
-        # --- WR / Naked Helium Logic (Merritt 2025) ---
-        # Equation 1: Gamma_e = 2.49e-5 * L * M^-1 (Solar units)
-        gamma_e = 2.49e-5 * L * (mass_current**-1)
+        max_k = 9 if no_compactOBJ else 14
 
-        # Equation 5 (Switch Luminosity for Eta condition): L_switch = 10^2.36 * Z^-1.91
-        # Note: This uses absolute Z (mass fraction).
-        l_switch = (10**2.36) * (Z_abs**-1.91)
+        # Apply filter
+        k_mask = (valid_group['Ka'] <= max_k)
+        if not k_mask.any():
+            continue
 
-        # Evaluation Booleans
-        # "For the Xsurf transition... assume that any K value for naked He is a WR"
-        # This implies X_surf condition is effectively True for all Ka in [7,8,9]
-        cond_xsurf_met = pd.Series(True, index=valid_group.index)
-        cond_gamma_met = gamma_e > 0.5
-        cond_eta_met = L > l_switch
+        valid_group = valid_group[k_mask]
 
-        if WR_cond == "any":
-            # If any condition is met. Since Xsurf is assumed True for Ka 7-9,
-            # this makes ALL Ka = 7-9 WRs, as well as some MS VMSs.
-            wr_satisfied = cond_xsurf_met | cond_gamma_met | cond_eta_met
-        elif WR_cond == "Xsurf":
-            wr_satisfied = cond_xsurf_met
-        elif WR_cond == "gamma":
-            wr_satisfied = cond_gamma_met
-        elif WR_cond == "eta":
-            wr_satisfied = cond_eta_met
-        elif WR_cond == "gamma_eta":
-            wr_satisfied = cond_gamma_met | cond_eta_met
-        else:
-            wr_satisfied = cond_xsurf_met
+        # Classify
+        valid_group = _classify_legacy_rows(valid_group, WR_cond, Z_abs, use_orig_thick_winds)
 
-        # Define Masks
+        # --- FILTER 2: WR Stars ---
+        if no_WR:
+            valid_group = valid_group[valid_group['stellar_type'] != 'WR']
 
-        # 1. Naked Helium / WR (Ka 7, 8, 9)
-        is_he_star = Ka.isin([7, 8, 9])
-        wr_mask = is_he_star & wr_satisfied
-        naked_he_mask = is_he_star & (~wr_satisfied)
-
-        # 2. Supergiants (Luminous & Evolved)
-        # Ka 2-6 (HG through AGB) can be supergiants if luminous
-        is_post_ms = Ka.isin([2, 3, 4, 5, 6])
-        is_luminous = log_L > 4.0
-        rsg_mask = is_post_ms & is_luminous & (Teff < 4000)
-        ysg_mask = is_post_ms & is_luminous & (Teff >= 4000) & (Teff < 7500)
-
-        # 3. AGB (Ka 5, 6) - Explicit in Legacy
-        # Note: We check RSG/YSG first. If not super luminous/cool, it's generic AGB.
-        agb_mask = Ka.isin([5, 6]) & (~rsg_mask) & (~ysg_mask)
-
-        # 4. Hertzsprung Gap (Ka 2)
-        hg_mask = (Ka == 2) & (~rsg_mask) & (~ysg_mask)
-
-        # 5. Red Giants (Ka 3 = GB, Ka 4 = CHeB)
-        # CHeB (Ka 4) can be blue loops. If hot, we shouldn't call it "Red Giant".
-        # If Ka=4 and hot (and not YSG), it falls to default "Other_Evolved".
-        rg_mask = Ka.isin([3, 4]) & (Teff < 5200) & (~rsg_mask) & (~ysg_mask)
-
-        # 6. Main Sequence (Ka 0, 1)
-        is_main_sequence = Ka.isin([0, 1])
-        o_mask = (Teff >= 30000) & is_main_sequence
-        b_mask = (Teff >= 10000) & (Teff < 30000) & is_main_sequence
-        a_mask = (Teff >= 7500) & (Teff < 10000) & is_main_sequence
-        f_mask = (Teff >= 6000) & (Teff < 7500) & is_main_sequence
-        g_mask = (Teff >= 5200) & (Teff < 6000) & is_main_sequence
-        k_mask = (Teff >= 3700) & (Teff < 5200) & is_main_sequence
-        m_mask = (Teff < 3700) & is_main_sequence
-
-        # 7. Remnants (Ka 10, 11, 12, 13, 14, 15)
-        wd_mask = Ka.isin([10, 11, 12])
-        ns_mask = (Ka == 13)
-        bh_mask = (Ka == 14)
-
-        conditions = [
-            wr_mask, naked_he_mask, rsg_mask, ysg_mask, agb_mask, hg_mask, rg_mask,
-            o_mask, b_mask, a_mask, f_mask, g_mask, k_mask, m_mask,
-            wd_mask, ns_mask, bh_mask
-        ]
-        choices = [
-            "WR", "naked_He", "RSG", "YSG", "AGB", "HG_star", "Red_Giant",
-            "O-type (MS)", "B-type (MS)", "A-type (MS)", "F-type (MS)", "G-type (Yellow Dwarf)",
-            "K-type (Orange Dwarf)", "M-type (Red Dwarf)",
-            "White_Dwarf", "Neutron_Star", "Black_Hole"
-        ]
-
-        valid_group['stellar_type'] = np.select(conditions, choices, default="Other_Evolved")
-
-        matched_groups.append(valid_group)
+        if not valid_group.empty:
+            matched_groups.append(valid_group)
 
     if not matched_groups:
-        print("Warning: No matching LEGACY files found.")
+        print("Warning: No matching LEGACY files found or all filtered out.")
         return None
 
     final_df = pd.concat(matched_groups, ignore_index=True)
     print(f"Successfully matched and classified {len(final_df)} stars (Legacy).")
     return final_df
+
+def match_to_legacy_sims_BSE_fast(
+    quantized_df, base_path, WR_cond="any", Zsun=0.0142,
+    q_dist_type="uniform", p_dist_type="uniform", q_grid=None, p_grid=None,
+    no_WR=False, no_compactOBJ=False, use_orig_thick_winds=False
+):
+    """
+    Matches quantized binary stars to Legacy (Hurley/BSE style) simulations.
+
+    Filters:
+    - Always skips systems where Ka > 14 or Kb > 14.
+    - If no_compactOBJ=True, skips systems where Ka > 9 or Kb > 9.
+    - If no_WR=True, skips systems where EITHER star is classified as 'WR'.
+    """
+    print(f"\nMatching BINARY population to BSE simulations with WR_cond='{WR_cond}'...")
+
+    if q_grid is None: q_grid = DEFAULT_BSE_GRID_Q
+    if p_grid is None: p_grid = DEFAULT_BSE_GRID_LOGP
+
+    # 0. Generate Params if needed
+    if 'q' not in quantized_df.columns or 'Period' not in quantized_df.columns:
+        print(f"Generating binary parameters (q: {q_dist_type}, Period: {p_dist_type})...")
+        quantized_df = _generate_binary_params(quantized_df, q_grid, p_grid, q_dist_type, p_dist_type)
+
+    required_cols = ['Mzams', 'Fe/H', 'q', 'Period']
+    for col in required_cols:
+        if col not in quantized_df.columns:
+            print(f"Error: Missing column '{col}' in quantized_df for BSE matching.")
+            return None
+
+    matched_groups = []
+    group_cols = ['Mzams', 'Fe/H', 'q', 'Period']
+
+    if quantized_df.empty:
+        print("Warning: Input dataframe is empty.")
+        return None
+
+    for (mass, feh, q, per), group in quantized_df.groupby(group_cols):
+
+        z_multiplier = 10**(feh*0.977)
+        Z_abs = Zsun * z_multiplier
+
+        path_parts = [
+            base_path,
+            f"{z_multiplier:g}Zsun",
+            f"{mass:g}",
+            f"q_{q:g}",
+            f"per_{per:g}",
+            "evolution.dat"
+        ]
+        evo_path = os.path.join(*path_parts)
+
+        if not os.path.exists(evo_path):
+            continue
+
+        try:
+            legacy_data = pd.read_csv(evo_path, sep=r'\s+')
+            if legacy_data.empty: continue
+            is_remnant = legacy_data['Ka'] >= 10
+            legacy_data = legacy_data[(legacy_data['logLa'] != -99) | is_remnant]
+            if legacy_data.empty: continue
+        except Exception as e:
+            print(f"Error reading {evo_path}: {e}")
+            continue
+
+        model_ages_yrs = legacy_data['t'].values * 1e6
+        max_model_age = model_ages_yrs[-1]
+
+        star_ages_yrs = group['Age [Gyr]'].values * 1e9
+        valid_age_mask = star_ages_yrs <= max_model_age
+        valid_group = group[valid_age_mask].copy()
+
+        if valid_group.empty:
+            continue
+
+        valid_star_ages = star_ages_yrs[valid_age_mask]
+        closest_indices = _find_nearest_indices(model_ages_yrs, valid_star_ages)
+
+        # --- EXTRACT PARAMETERS ---
+        kas_at_age = legacy_data['Ka'].values[closest_indices].astype(int)
+        kbs_at_age = legacy_data['Kb'].values[closest_indices].astype(int)
+
+        # --- FILTER 1: COMPACT OBJECTS ---
+        max_k = 9 if no_compactOBJ else 14
+        k_mask = (kas_at_age <= max_k) & (kbs_at_age <= max_k)
+
+        if not k_mask.any():
+            continue
+
+        final_group = valid_group[k_mask].copy()
+        final_indices = closest_indices[k_mask]
+
+        final_group['binary_id'] = final_group.index
+
+        # --- CONSTRUCT DATAFRAMES (Before WR Filter) ---
+
+        # Primary (A)
+        df_a = final_group.copy()
+        df_a['component'] = 'A'
+        df_a['Ka'] = legacy_data['Ka'].values[final_indices].astype(int)
+        df_a['Mass'] = legacy_data['Ma'].values[final_indices]
+        df_a['Radius'] = legacy_data['Ra'].values[final_indices]
+        df_a['log_L'] = legacy_data['logLa'].values[final_indices]
+        df_a['log_Teff'] = legacy_data['logTeffa'].values[final_indices]
+        df_a['separation'] = legacy_data['a'].values[final_indices]
+
+        # Secondary (B)
+        df_b = final_group.copy()
+        df_b['component'] = 'B'
+        df_b['Ka'] = legacy_data['Kb'].values[final_indices].astype(int)
+        df_b['Mass'] = legacy_data['Mb'].values[final_indices]
+        df_b['Radius'] = legacy_data['Rb'].values[final_indices]
+        df_b['log_L'] = legacy_data['logLb'].values[final_indices]
+        df_b['log_Teff'] = legacy_data['logTeffb'].values[final_indices]
+        df_b['separation'] = legacy_data['a'].values[final_indices]
+
+        if "thick_winds_trans_condition" in legacy_data.columns:
+            df_a['xsurf'] = legacy_data["xsurfa"].values[final_indices]
+            df_a['eta'] = legacy_data["etaa"].values[final_indices]
+            df_a['eta_trans'] = legacy_data["eta_transa"].values[final_indices]
+            df_a['Gamma_e'] = legacy_data["Gamma_ea"].values[final_indices]
+            df_a['Gamma_e_trans'] = legacy_data["Gamma_e_transa"].values[final_indices]
+            df_a['thick_winds_trans_condition'] = legacy_data["thick_winds_trans_condition"].values[final_indices]
+
+            df_b['xsurf'] = legacy_data["xsurfb"].values[final_indices]
+            df_b['eta'] = legacy_data["etab"].values[final_indices]
+            df_b['eta_trans'] = legacy_data["eta_transb"].values[final_indices]
+            df_b['Gamma_e'] = legacy_data["Gamma_eb"].values[final_indices]
+            df_b['Gamma_e_trans'] = legacy_data["Gamma_e_transb"].values[final_indices]
+            df_b['thick_winds_trans_condition'] = legacy_data["thick_winds_trans_condition"].values[final_indices]
+
+        # Classify
+        df_a = _classify_legacy_rows(df_a, WR_cond, Z_abs, use_orig_thick_winds)
+        df_b = _classify_legacy_rows(df_b, WR_cond, Z_abs, use_orig_thick_winds)
+
+        # --- FILTER 2: WR STARS ---
+        if no_WR:
+            # Use .values to avoid index alignment issues with duplicate indices
+            a_is_wr = (df_a['stellar_type'].values == 'WR')
+            b_is_wr = (df_b['stellar_type'].values == 'WR')
+
+            # We want to KEEP systems where NEITHER is WR
+            # i.e. NOT (a_is_wr OR b_is_wr)
+            keep_mask = ~ (a_is_wr | b_is_wr)
+
+            if not keep_mask.any():
+                continue
+
+            df_a = df_a.iloc[keep_mask]
+            df_b = df_b.iloc[keep_mask]
+
+        matched_groups.append(df_a)
+        matched_groups.append(df_b)
+
+    if not matched_groups:
+        print("Warning: No matching BSE files found (or all filtered out).")
+        return None
+
+    final_df = pd.concat(matched_groups, ignore_index=True)
+    print(f"Successfully matched and classified {len(final_df)} binary components.")
+    return final_df
+
+def extract_stars(stellar_masses,masses_list, directory, Z_age):
+
+    masses_list=np.sort(masses_list)
+
+    mesa_data_dict, evo_stages_dict,Mzams_counter=process_stars(stellar_masses,masses_list,directory)
+
+    star_para = {'Mzams': [],'Age': [],'Mass': [],'Luminosity': [],'Teff': [],'Radius': [], 'Evo_stage': [],
+    'tend_MS': [],'tend_giant': [],'Rmax_MS': [],'Rmax_giant': [],'L_Rmax_MS': [],'L_Rmax_giant': [],'L_WD': []}
+
+    Mass_count=0
+    for key in mesa_data_dict:
+
+        # Access the MesaData object for the current key
+        evo_stages = evo_stages_dict[key]
+        mesa_data = mesa_data_dict[key]
+
+        HG_CHeB_i=max([evo_stages["HG"],evo_stages["CHeB"]])
+        late_stages_i=max([evo_stages['HeHG'],evo_stages['CCB']])
+        Mzams=round(mesa_data["mass"][0],2)
+
+        for MMM in range(Mzams_counter[key]):
+
+            # Generate a random time between 0 and t
+            random_time = np.random.uniform(mesa_data["time"][max([0,evo_stages['ZAMS']])], Z_age)
+
+            if random_time <= mesa_data["time"].iloc[-1]:
+                # Find the index in star_age that is the closest to random_time
+                closest_index = np.argmin(np.abs(mesa_data["time"] - random_time))
+
+                if Mzams<0.8:                                                   # 1/2/10: MS/giant/WD
+                    if closest_index<=evo_stages["MS"]:
+                        star_para['Evo_stage'].append(1)
+                    else:
+                        star_para['Evo_stage'].append(10)
+                else:
+                    if closest_index<=evo_stages["MS"]:
+                        star_para['Evo_stage'].append(1)
+                    elif closest_index<=max([HG_CHeB_i,late_stages_i]):
+                        star_para['Evo_stage'].append(2)
+                    else:
+                        star_para['Evo_stage'].append(10)
+
+
+                star_para['Mzams'].append(Mzams)
+                star_para['Age'].append(mesa_data["time"][closest_index])
+                star_para['Mass'].append(mesa_data["mass"][closest_index])
+                star_para['Luminosity'].append(10**mesa_data["log_L"][closest_index])
+                star_para['Teff'].append(10**mesa_data["log_Teff"][closest_index])
+                star_para['Radius'].append(10**(mesa_data["log_R"][closest_index]))
+                star_para['tend_MS'].append(mesa_data["time"][evo_stages['MS']])
+                try:
+                    star_para['tend_giant'].append((mesa_data["time"][HG_CHeB_i]))
+                except:
+                    star_para['tend_giant'].append(-1)
+                try:
+                    star_para['Rmax_MS'].append(10**max(mesa_data["log_R"][max([0,evo_stages["ZAMS"]]):evo_stages["MS"]]))
+                    star_para['L_Rmax_MS'].append(10**(mesa_data["log_L"][np.argmax(mesa_data["log_R"][max([0,evo_stages["ZAMS"]]):evo_stages["MS"]])]))
+
+                except:
+                    star_para['Rmax_MS'].append(-1)
+                    star_para['L_Rmax_MS'].append(-1)
+
+
+
+                try:
+                    star_para['Rmax_giant'].append(10**max(mesa_data["log_R"][max([0,evo_stages["MS"]]):max([HG_CHeB_i,late_stages_i])]))
+                    star_para['L_Rmax_giant'].append(10**(mesa_data["log_L"][np.argmax(mesa_data["log_R"][max([0,evo_stages["MS"]]):max([HG_CHeB_i,late_stages_i])])]))
+                except:
+                    star_para['Rmax_giant'].append(-1)
+                    star_para['L_Rmax_giant'].append(-1)
+
+        print("All the stars for {} M\u2609 done".format(Mzams))
+
+
+        Mass_count+=1
+
+
+    return star_para
 
 def extract_stars(stellar_masses,masses_list, directory, Z_age):
 
@@ -486,7 +849,7 @@ def process_stars(stellar_masses,masses_list,directory):
             evo_stages[string] = last_index
 
         evo_stages_dict[str(stellar_masses[k])] = evo_stages
-        
+
         evo_stages = {'ZAMS' : -1, 'MS' : -1, 'HG' : -1, 'CHeB' : -1, 'HeHG' : -1, 'CCB' : -1, 'COB' : -1}
 
     print("Stars processed \n")
@@ -722,8 +1085,8 @@ def HRD(star_para):
     plt.scatter(np.log10(Teff_values), np.log10(Luminosity_values), c=Mzams_values, cmap=cmap, norm=norm, marker='o', alpha=0.85,s=25)
 
     # Add labels and a colorbar
-    plt.xlabel('log($T_{eff}$ [K])',fontsize=25)
-    plt.ylabel('log($L$ [L$_{\odot}$])',fontsize=25)
+    plt.xlabel(r'log($T_{eff}$ [K])',fontsize=25)
+    plt.ylabel(r'log($L$ [L$_{\odot}$])',fontsize=25)
     #plt.title('HR Diagram',labelpad=20)
     plt.tick_params(labelsize=25,axis='both', which='both',top=True,right=True,length=10)
 
@@ -742,41 +1105,42 @@ def process_matched_population(
     what_to_do="generate",
     mesa_dir="./MESA Simulations",
     sse_dir="../SSE/Simulations",
+    bse_dir="../BSE/Simulations",
     output_dir_mesa="./mesa_matched_chunks",
     output_dir_sse="./sse_matched_chunks",
+    output_dir_bse="./bse_matched_chunks",
     chunk_size=10_000_000,
     wr_cond="any",
-    mesa_cols=None
+    mesa_cols=None,
+    q_dist_type="uniform",
+    p_dist_type="uniform",
+    bse_grid_q=None,
+    bse_grid_logp=None,
+    no_WR=False,
+    no_compactOBJ=True
 ):
     """
-    Wrapper function to handle chunking, generating, or extracting MESA/SSE populations.
+    Wrapper function to handle chunking, generating, or extracting MESA/SSE/BSE populations.
 
     Args:
-        q_df (pd.DataFrame, optional): Input dataframe of stars (quantized). Defaults to None.
-        mode (str): "MESA" or "SSE".
-        what_to_do (str): "generate" or "just_extract".
-        mesa_dir (str): Path to MESA simulations.
-        sse_dir (str): Path to SSE simulations.
-        output_dir_mesa (str): Directory to save/load MESA parquets.
-        output_dir_sse (str): Directory to save/load SSE parquets.
-        chunk_size (int): Number of rows per chunk for large generation.
-        wr_cond (str): Wolf-Rayet condition ('any', 'Xsurf', etc.).
-        mesa_cols (list): Columns to extract for MESA. Defaults to standard set if None.
-
-    Returns:
-        dask.dataframe: The resulting dataframe (lazy loaded).
+        no_WR (bool): If True, filters out systems containing WR stars.
+        no_compactOBJ (bool): If True, filters out systems with Compact Objects (K>9) for SSE/BSE.
+                              Always filters K>14.
     """
 
-    # 1. Select the output directory based on mode
+    if bse_grid_q is None: bse_grid_q = DEFAULT_BSE_GRID_Q
+    if bse_grid_logp is None: bse_grid_logp = DEFAULT_BSE_GRID_LOGP
+
     if mode == "MESA":
         output_dir = output_dir_mesa
     elif mode == "SSE":
         output_dir = output_dir_sse
+    elif mode == "BSE":
+        output_dir = output_dir_bse
     else:
-        print(f"Error: Unknown mode '{mode}'. Choose 'MESA' or 'SSE'.")
+        print(f"Error: Unknown mode '{mode}'. Choose 'MESA', 'SSE', or 'BSE'.")
         return None
 
-    # Default MESA columns if not provided
     if mesa_cols is None:
         mesa_cols = [
             "star_age", "star_mass", "log_R", "log_Teff", "log_L",
@@ -784,11 +1148,8 @@ def process_matched_population(
             "RMAX_logL", "RMAX_logTeff", "max_age"
         ]
 
-    # Handle numeric limit logic
-    # If q_df is provided, we use its length. If not (extract only), we assume large or handle differently.
     num_stars = len(q_df) if q_df is not None else 0
 
-    # Check dependencies
     if what_to_do == 'generate' and q_df is None:
         print("Error: 'generate' mode requires an input DataFrame (q_df).")
         return None
@@ -797,27 +1158,20 @@ def process_matched_population(
 
     # --- MESA LOGIC ---
     if mode == "MESA":
-
-        # 1. Just Extract
         if what_to_do == 'just_extract':
             if num_stars > 0 and num_stars < 1e7:
-                 # Try single file first
                  single_path = os.path.join(output_dir, 'matched_chunk.parquet')
                  if os.path.exists(single_path):
                      df_stars = dd.read_parquet(single_path)
                  else:
-                     # Fallback to wildcard
                      df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
             else:
-                 # Default to wildcard for extract mode if N is unknown or large
                  df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
-
             print(f"Dataset has {len(df_stars)} rows and {len(df_stars.columns)} columns.")
 
-        # 2. Generate (Small N)
         elif num_stars < 1e7:
             os.makedirs(output_dir, exist_ok=True)
-            df_mesa = match_to_mesa_sims_fast(q_df, mesa_dir, mesa_cols, WR_cond=wr_cond)
+            df_mesa = match_to_mesa_sims_fast(q_df, mesa_dir, mesa_cols, WR_cond=wr_cond, no_WR=no_WR)
 
             if df_mesa is not None and not df_mesa.empty:
                 output_path = os.path.join(output_dir, "matched_chunk.parquet")
@@ -825,7 +1179,6 @@ def process_matched_population(
                 print(f"Chunk successfully processed and saved to {output_path}")
                 df_stars = dd.read_parquet(output_path)
 
-        # 3. Generate (Large N - Chunking)
         else:
             os.makedirs(output_dir, exist_ok=True)
             num_chunks = int(np.ceil(num_stars / chunk_size))
@@ -837,7 +1190,7 @@ def process_matched_population(
                 df_chunk = q_df.iloc[start_index:end_index]
 
                 print(f"\n--- Processing Chunk {i+1}/{num_chunks} ---")
-                matched_chunk_df = match_to_mesa_sims_fast(df_chunk, mesa_dir, mesa_cols, WR_cond=wr_cond)
+                matched_chunk_df = match_to_mesa_sims_fast(df_chunk, mesa_dir, mesa_cols, WR_cond=wr_cond, no_WR=no_WR)
 
                 if matched_chunk_df is not None and not matched_chunk_df.empty:
                     output_path = os.path.join(output_dir, f"matched_chunk_{i+1}.parquet")
@@ -850,8 +1203,6 @@ def process_matched_population(
 
     # --- SSE LOGIC ---
     elif mode == "SSE":
-
-        # 1. Just Extract
         if what_to_do == 'just_extract':
             if num_stars > 0 and num_stars < 1e7:
                  single_path = os.path.join(output_dir, 'matched_chunk.parquet')
@@ -861,14 +1212,11 @@ def process_matched_population(
                      df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
             else:
                  df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
-
             print(f"Dataset has {len(df_stars)} rows and {len(df_stars.columns)} columns.")
 
-        # 2. Generate (Small N)
         elif num_stars < 1e7:
             os.makedirs(output_dir, exist_ok=True)
-            # Pass WR_cond to SSE as well since the function supports it
-            df_sse = match_to_legacy_sims_fast(q_df, sse_dir, WR_cond=wr_cond)
+            df_sse = match_to_legacy_sims_fast(q_df, sse_dir, WR_cond=wr_cond, no_WR=no_WR, no_compactOBJ=no_compactOBJ)
 
             if df_sse is not None and not df_sse.empty:
                 output_path = os.path.join(output_dir, "matched_chunk.parquet")
@@ -876,7 +1224,6 @@ def process_matched_population(
                 print(f"Processed and saved to {output_path}")
                 df_stars = dd.read_parquet(output_path)
 
-        # 3. Generate (Large N - Chunking)
         else:
             os.makedirs(output_dir, exist_ok=True)
             num_chunks = int(np.ceil(num_stars / chunk_size))
@@ -888,7 +1235,72 @@ def process_matched_population(
                 df_chunk = q_df.iloc[start_index:end_index]
 
                 print(f"\n--- Processing Chunk {i+1}/{num_chunks} ---")
-                matched_chunk_df = match_to_legacy_sims_fast(df_chunk, sse_dir, WR_cond=wr_cond)
+                matched_chunk_df = match_to_legacy_sims_fast(df_chunk, sse_dir, WR_cond=wr_cond, no_WR=no_WR, no_compactOBJ=no_compactOBJ)
+
+                if matched_chunk_df is not None and not matched_chunk_df.empty:
+                    output_path = os.path.join(output_dir, f"matched_chunk_{i+1}.parquet")
+                    matched_chunk_df.to_parquet(output_path)
+                    print(f"Chunk {i+1} successfully processed and saved to {output_path}")
+
+            print("\nAll chunks processed!")
+            df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
+            print(f"Dataset has {len(df_stars)} rows and {len(df_stars.columns)} columns.")
+
+    # --- BSE LOGIC ---
+    elif mode == "BSE":
+        if what_to_do == 'just_extract':
+            if num_stars > 0 and num_stars < 1e7:
+                 single_path = os.path.join(output_dir, 'matched_chunk.parquet')
+                 if os.path.exists(single_path):
+                     df_stars = dd.read_parquet(single_path)
+                 else:
+                     df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
+            else:
+                 df_stars = dd.read_parquet(os.path.join(output_dir, '*.parquet'))
+            print(f"Dataset has {len(df_stars)} rows and {len(df_stars.columns)} columns.")
+
+        elif num_stars < 1e7:
+            os.makedirs(output_dir, exist_ok=True)
+            df_bse = match_to_legacy_sims_BSE_fast(
+                q_df,
+                bse_dir,
+                WR_cond=wr_cond,
+                q_dist_type=q_dist_type,
+                p_dist_type=p_dist_type,
+                q_grid=bse_grid_q,
+                p_grid=bse_grid_logp,
+                no_WR=no_WR,
+                no_compactOBJ=no_compactOBJ
+            )
+
+            if df_bse is not None and not df_bse.empty:
+                output_path = os.path.join(output_dir, "matched_chunk.parquet")
+                df_bse.to_parquet(output_path)
+                print(f"Processed and saved to {output_path}")
+                df_stars = dd.read_parquet(output_path)
+
+        else:
+            os.makedirs(output_dir, exist_ok=True)
+            num_chunks = int(np.ceil(num_stars / chunk_size))
+            print(f"Processing {num_stars} stars in {num_chunks} chunks of size {chunk_size} using BSE tracks...")
+
+            for i in range(num_chunks):
+                start_index = i * chunk_size
+                end_index = (i + 1) * chunk_size
+                df_chunk = q_df.iloc[start_index:end_index]
+
+                print(f"\n--- Processing Chunk {i+1}/{num_chunks} ---")
+                matched_chunk_df = match_to_legacy_sims_BSE_fast(
+                    df_chunk,
+                    bse_dir,
+                    WR_cond=wr_cond,
+                    q_dist_type=q_dist_type,
+                    p_dist_type=p_dist_type,
+                    q_grid=bse_grid_q,
+                    p_grid=bse_grid_logp,
+                    no_WR=no_WR,
+                    no_compactOBJ=no_compactOBJ
+                )
 
                 if matched_chunk_df is not None and not matched_chunk_df.empty:
                     output_path = os.path.join(output_dir, f"matched_chunk_{i+1}.parquet")
