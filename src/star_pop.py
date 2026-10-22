@@ -16,14 +16,11 @@ from functools import lru_cache
 def setup_inverse_cdf_sampler(cdf_function, domain_min, domain_max, args=(), resolution=100000):
     """
     Pre-calculates the inverse CDF to create a fast interpolation function for sampling.
-    This is a performance optimization to avoid repeated numerical integration.
     """
     u_values = np.linspace(0.0000001, 0.9999999, resolution)
     def inverse_cdf_slow(u):
-        # Find the value x such that CDF(x) = u
         return optimize.root_scalar(lambda x: cdf_function(x, *args) - u, bracket=[domain_min, domain_max]).root
     x_values = [inverse_cdf_slow(u) for u in u_values]
-    # Create an interpolation function from the pre-calculated values
     sampler = interp1d(u_values, x_values, bounds_error=False, fill_value=(x_values[0], x_values[-1]))
     return sampler
 
@@ -33,7 +30,6 @@ def setup_inverse_cdf_sampler(cdf_function, domain_min, domain_max, args=(), res
 def setup_high_alpha_r_sampler(R_min=1.5, R_max=20.0, resolution=10000):
     """Sets up the fast sampler for the high-alpha (thick disk) radial distribution."""
     print("Setting up high-alpha (thick disk) radial sampler...")
-    # Exponential disk model for the thick disk component
     Rdistr = lambda R: np.exp(-R / (1/0.43)) * R / (1/0.43)**2
     normalization_constant, _ = integrate.quad(Rdistr, R_min, R_max)
     Rdistr_normalized = lambda R: Rdistr(R) / normalization_constant
@@ -41,14 +37,15 @@ def setup_high_alpha_r_sampler(R_min=1.5, R_max=20.0, resolution=10000):
     return setup_inverse_cdf_sampler(CDF_R, R_min, R_max, resolution=resolution)
 
 def setup_age_sampler(age_min_Gyr, age_max_Gyr, resolution=10000):
-    """Sets up the fast sampler for a specific age distribution range based on a star formation history."""
-    # The star formation history (SFH) is a function of LOOKBACK time (which is equivalent to AGE)
+    """Sets up the fast sampler for a specific age distribution range."""
+    # The star formation history is a function of LOOKBACK time (which is equivalent to AGE)
+    # SFH(t) where t is lookback time.
     SFH = lambda t: np.exp(-(12.0 - t) / 6.8)
 
     t_min, t_max = age_min_Gyr, age_max_Gyr
 
     norm_const, _ = integrate.quad(SFH, t_min, t_max)
-    if norm_const <= 0: return lambda u: np.full_like(u, t_min) # Handle cases with no star formation
+    if norm_const <= 0: return lambda u: np.full_like(u, t_min)
 
     sfh_normalized = lambda t: SFH(t) / norm_const
     CDF_t = lambda t: integrate.quad(sfh_normalized, t_min, t)[0]
@@ -56,7 +53,6 @@ def setup_age_sampler(age_min_Gyr, age_max_Gyr, resolution=10000):
     return setup_inverse_cdf_sampler(CDF_t, t_min, t_max, resolution=resolution)
 
 def setup_v_sampler(z_min=0, z_max=10, resolution=10000):
-    """Sets up the sampler for vertical distance from the Galactic plane."""
     Vdistr = lambda z: (1 / 0.95) * np.exp(-np.abs(z) / 0.95)
     V_norm_const, _ = integrate.quad(Vdistr, z_min, z_max)
     Vdistr_normalized = lambda z: Vdistr(z) / V_norm_const
@@ -64,7 +60,6 @@ def setup_v_sampler(z_min=0, z_max=10, resolution=10000):
     return setup_inverse_cdf_sampler(CDF_V, z_min, z_max, resolution=resolution)
 
 def setup_imf_sampler(Mzams_min, Mzams_max, resolution=10000):
-    """Sets up the sampler for the Initial Mass Function (IMF) using a broken power-law."""
     alpha1, alpha2, alpha3 = -1.3, -2.2, -2.7
     m_break1, m_break2 = 0.5, 1.0
     def integral_power_law(m, p):
@@ -102,10 +97,8 @@ def setup_imf_sampler(Mzams_min, Mzams_max, resolution=10000):
             return c1 + c2 + A3 * (integral_power_law(m, alpha3) - integral_power_law(max(m_break2, Mzams_min), alpha3))
     return setup_inverse_cdf_sampler(cdf_m, Mzams_min, Mzams_max, resolution=resolution)
 
-def setup_age_dependent_r_sampler(R_min=1.5, R_max=20.0, age_bins=np.arange(0, 14, 0.5), resolution=10000):
-    """Sets up binned radial samplers for the low-alpha (thin disk) population, where the scale length evolves with age."""
+def setup_age_dependent_r_sampler(R_min=1.5, R_max=20.0, age_bins=np.arange(0, 14, 2), resolution=10000):
     print(f"Setting up binned low-alpha (thin disk) radial samplers for age bins: {age_bins}")
-    # Model for how the radial scale length of the thin disk changes with stellar age
     Rdistr_lowZ = lambda R, age: np.exp(-R / (4*(1-0.3*age/8))) * R / (4*(1-0.3*age/8))**2 if (4*(1-0.3*age/8)) > 0 else 0
     sampler_dict = {}
     for i in range(len(age_bins)):
@@ -121,7 +114,7 @@ def setup_age_dependent_r_sampler(R_min=1.5, R_max=20.0, age_bins=np.arange(0, 1
 # SAMPLER CONTAINER CLASS
 #==================================================================
 class SamplerContainer:
-    """A container class to hold all the pre-calculated sampler objects for efficient reuse."""
+    """A container class to hold all the pre-calculated sampler objects."""
     def __init__(self, Mzams_min, Mzams_max, resolution=10000):
         print(f"Setting up all samplers with resolution={resolution}... (This may take a moment)")
         # Create samplers for each component based on their age (lookback time) ranges
@@ -134,13 +127,11 @@ class SamplerContainer:
         print("Samplers created successfully.")
 
 def save_samplers(sampler_obj, filepath):
-    """Saves the sampler container object to a file using pickle."""
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, 'wb') as f: pickle.dump(sampler_obj, f)
     print(f"Samplers saved to {filepath}")
 
 def load_samplers(filepath):
-    """Loads a sampler container object from a file."""
     with open(filepath, 'rb') as f: sampler_obj = pickle.load(f)
     print(f"Samplers loaded from {filepath}")
     return sampler_obj
@@ -149,7 +140,6 @@ def load_samplers(filepath):
 # FAST DRAWING FUNCTIONS (called during generation)
 #==================================================================
 def draw_samples_R_binned(ages, sampler_dict, age_bins):
-    """Draws radial samples for stars based on their age, using the pre-binned samplers."""
     bin_indices = np.digitize(ages, age_bins) - 1
     bin_indices = np.maximum(0, bin_indices)
     corresponding_bins = age_bins[bin_indices]
@@ -157,60 +147,25 @@ def draw_samples_R_binned(ages, sampler_dict, age_bins):
     radii = [sampler_dict[bin_val](u) for bin_val, u in zip(corresponding_bins, random_uniforms)]
     return np.array(radii)
 
-def draw_spiral_arm_positions(radii, ages, arm_params_list, arm_membership_prob):
-    """
-    IMPROVED: Assigns stars to spiral arms based on their radius and age.
-    This function now incorporates the key finding from the research: the arm-to-interarm
-    density contrast is a strong function of stellar age. Younger stars are more
-    tightly confined to the arms (lower scatter), while older stars are more dispersed.
-    """
+def draw_spiral_arm_positions(radii, arm_params_list, sfr_probs_list, angular_scatter_deg):
     num_stars = len(radii)
-    arm_names = [arm['name'] for arm in arm_membership_prob]
-    weights = [arm['probability'] for arm in arm_membership_prob]
+    arm_names = [arm['name'] for arm in sfr_probs_list]
+    weights = [(arm['min_probability_pct'] + arm['max_probability_pct']) / 2 for arm in sfr_probs_list]
+    arm_param_map = {arm['name']: arm for arm in arm_params_list}
     chosen_arm_names = random.choices(arm_names, weights=weights, k=num_stars)
-
     final_angles_deg = []
-
-    # --- Age-dependent angular scatter ---
-    # Young stars (<100 Myr) are "dynamically cold" -> low scatter
-    # Intermediate stars are "warmer" -> medium scatter
-    # Old stars (>1 Gyr) are "dynamically hot" -> high scatter, less confined to arms
-    min_scatter_deg = 2.0  # For the youngest stars, tightly confined
-    max_scatter_deg = 15.0 # For the oldest stars, very dispersed
-
-    # Simple linear mapping from age to scatter. More complex functions could be used.
-    angular_scatters_deg = min_scatter_deg + (ages / 2.0) * (max_scatter_deg - min_scatter_deg)
-
+    scatter_rad = math.radians(angular_scatter_deg)
     for i in range(num_stars):
-        R, arm_name, scatter_deg = radii[i], chosen_arm_names[i], angular_scatters_deg[i]
-
-        # Find the correct segment of the arm for the star's given radius
-        chosen_segment = arm_params_list[arm_name]
-
-        # Calculate the mean angle of the arm at that radius using the logarithmic spiral equation
-        # R = R_ref * exp((phi - phi_ref) * tan(p))
-        # which rearranges to: phi = phi_ref + ln(R / R_ref) / tan(p)
-        p_rad = math.radians(chosen_segment['pitch_angle_deg'])
-        R_ref = chosen_segment['ref_radius_kpc']
-        phi_ref_rad = math.radians(chosen_segment['ref_angle_deg'])
-
-        try:
-            # The term 1/tan(p) defines how tightly wound the arm is.
-            mean_theta_rad = phi_ref_rad + (math.log(R / R_ref)) / math.tan(p_rad)
-        except (ValueError, ZeroDivisionError):
-            # Fallback for invalid math operations (e.g., log(negative number))
-            mean_theta_rad = random.uniform(0, 2 * math.pi)
-
-        # Apply the age-dependent scatter to the mean angle
-        scatter_rad = math.radians(scatter_deg)
+        R, arm_name = radii[i], chosen_arm_names[i]
+        arm_params = arm_param_map[arm_name]
+        a, b, theta0_rad = arm_params['a_kpc'], arm_params['b'], arm_params['theta0_rad']
+        try: mean_theta_rad = theta0_rad + (math.log(R / a)) / b
+        except (ValueError, ZeroDivisionError): mean_theta_rad = random.uniform(0, 2 * math.pi)
         final_theta_rad = random.normalvariate(mean_theta_rad, scatter_rad)
-        final_angles_deg.append(math.degrees(final_theta_rad))
-
+        final_angles_deg.append(math.degrees(final_theta_rad) % 360)
     return chosen_arm_names, np.array(final_angles_deg)
 
-
 def draw_samples_FeH(Rs, ages, tm=12.0, feh_scatter_std=0.1, FeH_min=-3.0, FeH_max=0.5):
-    """Draws metallicity ([Fe/H]) samples based on radius and age."""
     t = np.clip(ages, 0, tm)
     Fm, NablaFeH, RnowFeH, gammaFeH = -1.0, 0.075, 8.7, 0.3
     ft = (1 - t / tm)**gammaFeH
@@ -223,10 +178,13 @@ def draw_samples_FeH(Rs, ages, tm=12.0, feh_scatter_std=0.1, FeH_min=-3.0, FeH_m
 # MAIN GENERATOR FUNCTION
 #==================================================================
 def generate_star_population(num_stars, samplers, disk_type="all", galaxy_shape="elliptical",
-                             arm_params_list=None, arm_membership_prob=None, seed=None,
+                             arm_params_list=None, sfr_probs_list=None,
+                             angular_scatter_deg=2.0, seed=None,
                              FeH_min=-3.0, FeH_max=0.5):
     print(f"Generating {num_stars} stars for the '{disk_type}' disk model...")
 
+    # --- 1. Generate Ages based on disk_type ---
+    # The sampled variable is LOOKBACK TIME, which is the AGE of the star.
     if disk_type == "thin":
         ages = samplers.age_sampler_thin(np.random.rand(num_stars))
         population_type = np.full(num_stars, "thin_disk")
@@ -234,22 +192,25 @@ def generate_star_population(num_stars, samplers, disk_type="all", galaxy_shape=
         ages = samplers.age_sampler_thick(np.random.rand(num_stars))
         population_type = np.full(num_stars, "thick_disk")
     elif disk_type == "all":
-        # Approximate ratio of thin to thick disk stars
-        num_thin = int(num_stars * 0.85)
+        num_thin = num_stars // 2
         num_thick = num_stars - num_thin
+
         ages_thin = samplers.age_sampler_thin(np.random.rand(num_thin))
         ages_thick = samplers.age_sampler_thick(np.random.rand(num_thick))
+
         ages = np.concatenate([ages_thin, ages_thick])
         population_type = np.concatenate([np.full(num_thin, "thin_disk"), np.full(num_thick, "thick_disk")])
-        # Shuffle the combined arrays to mix the populations
+
         p = np.random.permutation(num_stars)
         ages, population_type = ages[p], population_type[p]
     else:
         raise ValueError("disk_type must be 'thin', 'thick', or 'all'")
 
+    # --- 2. Generate other primary parameters ---
     masses = samplers.imf_sampler(np.random.rand(num_stars))
     vertical_distances = samplers.v_sampler(np.random.rand(num_stars))
 
+    # --- 3. Generate Radii based on population type ---
     radii = np.zeros(num_stars)
     thin_mask = (population_type == "thin_disk")
     thick_mask = (population_type == "thick_disk")
@@ -259,11 +220,11 @@ def generate_star_population(num_stars, samplers, disk_type="all", galaxy_shape=
     if np.any(thick_mask):
         radii[thick_mask] = samplers.r_sampler_high_alpha(np.random.rand(np.sum(thick_mask)))
 
+    # --- 4. Generate remaining dependent parameters ---
     metallicities = draw_samples_FeH(radii, ages, FeH_min=FeH_min, FeH_max=FeH_max)
 
     if galaxy_shape == "spiral":
-        # Pass ages to the spiral arm drawing function
-        arm_positions, alpha_angles = draw_spiral_arm_positions(radii, ages, arm_params_list, arm_membership_prob)
+        arm_positions, alpha_angles = draw_spiral_arm_positions(radii, arm_params_list, sfr_probs_list, angular_scatter_deg)
     else:
         arm_positions = ["none"] * num_stars
         alpha_angles = np.random.uniform(0, 360, size=num_stars)
@@ -271,14 +232,18 @@ def generate_star_population(num_stars, samplers, disk_type="all", galaxy_shape=
     print("Generation complete.")
 
     data_dict = {
-        "Mzams": masses, "Age [Gyr]": ages, "Fe/H": metallicities,
-        "Radial Distance [kpc]": radii, "Vertical Distance [kpc]": vertical_distances,
-        "Arm Position": arm_positions, "alpha_angle_deg": alpha_angles,
-        "population_type": population_type, "random_seed": np.full(num_stars, seed),
+        "Mzams": masses,
+        "Age [Gyr]": ages, # Correctly assigned
+        "Fe/H": metallicities,
+        "Radial Distance [kpc]": radii,
+        "Vertical Distance [kpc]": vertical_distances,
+        "Arm Position": arm_positions,
+        "alpha_angle_deg": alpha_angles,
+        "population_type": population_type,
+        "random_seed": np.full(num_stars, seed),
         "disk_type": disk_type
     }
     return pd.DataFrame(data_dict)
-
 
 
 #==================================================================
@@ -377,18 +342,8 @@ if __name__ == "__main__":
     SAMPLER_RESOLUTION = 10000 # Controls accuracy vs. setup time for samplers
 
     # --- Spiral Arm Configuration ---
-    SFR_PROBABILITY_BY_ARM = [
-    {'name': 'Scutum-Centaurus', 'min_probability_pct': 35, 'max_probability_pct': 45},
-    {'name': 'Perseus', 'min_probability_pct': 25, 'max_probability_pct': 35},
-    {'name': 'Local (Orion) Arm', 'min_probability_pct': 10, 'max_probability_pct': 15},
-    {'name': 'Sagittarius', 'min_probability_pct': 5, 'max_probability_pct': 10},
-    {'name': 'Norma', 'min_probability_pct': 5, 'max_probability_pct': 10}]
-    ARM_PARAMS = [
-    {'name': 'Scutum-Centaurus', 'a_kpc': 3.5, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(20)},
-    {'name': 'Perseus', 'a_kpc': 4.9, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(150)},
-     {'name': 'Local (Orion) Arm', 'a_kpc': 4.0, 'b': 1/math.tan(math.radians(10)), 'theta0_rad': math.radians(100)},
-      {'name': 'Sagittarius', 'a_kpc': 4.0, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(280)},
-      {'name': 'Norma', 'a_kpc': 3.0, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(200)}]
+    SFR_PROBABILITY_BY_ARM = [{'name': 'Scutum-Centaurus', 'min_probability_pct': 35, 'max_probability_pct': 45}, {'name': 'Perseus', 'min_probability_pct': 25, 'max_probability_pct': 35}, {'name': 'Local (Orion) Arm', 'min_probability_pct': 10, 'max_probability_pct': 15}, {'name': 'Sagittarius', 'min_probability_pct': 5, 'max_probability_pct': 10}, {'name': 'Norma', 'min_probability_pct': 5, 'max_probability_pct': 10}]
+    ARM_PARAMS = [{'name': 'Scutum-Centaurus', 'a_kpc': 3.5, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(20)}, {'name': 'Perseus', 'a_kpc': 4.9, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(150)}, {'name': 'Local (Orion) Arm', 'a_kpc': 4.0, 'b': 1/math.tan(math.radians(10)), 'theta0_rad': math.radians(100)}, {'name': 'Sagittarius', 'a_kpc': 4.0, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(280)}, {'name': 'Norma', 'a_kpc': 3.0, 'b': 1/math.tan(math.radians(12)), 'theta0_rad': math.radians(200)}]
     ANGULAR_SCATTER_DEG = 5.0
 
     # --- Seed the random number generators for reproducibility ---
